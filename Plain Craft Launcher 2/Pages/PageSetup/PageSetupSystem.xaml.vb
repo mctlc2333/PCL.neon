@@ -18,11 +18,24 @@ Public Class PageSetupSystem
         If IsLoaded Then Return
         IsLoaded = True
 
+        LanguageComboInit()
+
         AniControlEnabled += 1
         Reload()
         SliderLoad()
         AniControlEnabled -= 1
 
+    End Sub
+    ''' <summary>
+    ''' 初始化语言选择下拉框（73 种语言，索引与设置项 UiLanguage 对应）。
+    ''' </summary>
+    Private Sub LanguageComboInit()
+        ComboSystemLanguage.Items.Clear()
+        For i = 0 To ModLanguage.LanguageList.Length - 1
+            Dim Item As New MyComboBoxItem With {.Content = ModLanguage.LanguageList(i).Name}
+            SettingService.SetValue(Item, i.ToString)
+            ComboSystemLanguage.Items.Add(Item)
+        Next
     End Sub
     Public Sub Reload()
         SettingService.RefreshSettings(Me)

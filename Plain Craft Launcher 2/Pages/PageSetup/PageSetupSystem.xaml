@@ -165,22 +165,19 @@
                 </Grid>
             </local:MyCard>
 
-            <!-- <local:MyCard x:Name="CardMain" Margin="0,15" Title="全局设置">
+            <local:MyCard x:Name="CardLanguage" Margin="0,0,0,15" Title="全局设置">
                 <StackPanel Margin="25,40,25,15">
-                    <Grid x:Name="PanMainLang" Height="28" Margin="0,0,0,10" Visibility="Collapsed">
+                    <Grid x:Name="PanMainLang" Height="28">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="语言" Margin="0,0,25,0" />
-                        <local:MyComboBox x:Name="ComboBackgroundSuit" Tag="UiBackgroundSuit" HorizontalAlignment="Left" Width="170" Grid.Column="1">
-                            <local:MyComboBoxItem Content="简体中文" Tag="zh_CN" IsSelected="True" />
-                            <local:MyComboBoxItem Content="繁體中文" Tag="zh_HK" />
-                            <local:MyComboBoxItem Content="English" Tag="en_US" />
-                        </local:MyComboBox>
+                        <local:MyComboBox x:Name="ComboSystemLanguage" local:SettingService.Key="UiLanguage" HorizontalAlignment="Left" Width="220" Grid.Column="1"
+                                          ToolTip="选择启动器界面语言。&#xa;已收录的界面文本会切换为所选语言，未收录的文本保持中文。" />
                     </Grid>
                 </StackPanel>
-            </local:MyCard> -->
+            </local:MyCard>
             <local:MyCard x:Name="CardDebug" Margin="0,0,0,15" Title="调试选项" CanSwap="True" IsSwapped="True">
                 <StackPanel Margin="25,40,25,15">
                     <Grid x:Name="PanDebugAnim" Height="22" Margin="0,0,0,10">

@@ -362,6 +362,8 @@ Public Class FormMain
         PageSetupUI.HiddenRefresh()
         PageSetupUI.BackgroundRefresh(False, True)
         MusicRefreshPlay(False, True)
+        '应用已保存的界面语言
+        ModLanguage.LangApply()
         '扩展按钮
         BtnExtraDownload.ShowCheck = AddressOf BtnExtraDownload_ShowCheck
         BtnExtraBack.ShowCheck = AddressOf BtnExtraBack_ShowCheck
