@@ -20,6 +20,9 @@ Public Class PageSetupSystem
 
         LanguageComboInit()
 
+        '打开设置页时立即应用当前语言（首次遍历会记录 XAML 中文原文，保证之后可切回）
+        ModLanguage.LangApplySubTreeSafe(Me.PanMain)
+
         AniControlEnabled += 1
         Reload()
         SliderLoad()

@@ -120,6 +120,8 @@ Public Module ModLanguage
 
     ''' <summary>
     ''' 翻译指定字符串；未收录时回退英文，再回退原文（中文）。
+    ''' 注意：简体中文为源语言（zh_CN 翻译表为空），切回中文时必须直接返回原文，
+    ''' 不能回退英文表，否则菜单栏会停留在英文无法切回。
     ''' </summary>
     Public Function Lang(Source As String) As String
         If String.IsNullOrEmpty(Source) Then Return Source
@@ -128,7 +130,10 @@ Public Module ModLanguage
         If Translations.TryGetValue(LanguageCurrent, Table) Then
             If Table.TryGetValue(Source, Result) Then Return Result
         End If
-        If LanguageCurrent <> "en_US" AndAlso Translations.TryGetValue("en_US", Table) Then
+        '中文为源语言：直接返回原文，禁止回退英文
+        If LanguageCurrent = "zh_CN" Then Return Source
+        '其他未收录语言回退英文，再回退原文（中文）
+        If Translations.TryGetValue("en_US", Table) Then
             If Table.TryGetValue(Source, Result) Then Return Result
         End If
         Return Source
@@ -144,6 +149,18 @@ Public Module ModLanguage
             If FrmSetupSystem IsNot Nothing Then LangApplySubTree(FrmSetupSystem.PanMain)
         Catch ex As Exception
             '语言应用属装饰性操作，失败时静默记录，避免打断启动流程
+            Logger.Error(ex, "应用语言失败", LogBehavior.None)
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' 对指定子树应用当前语言（供设置页 Loaded 等场景调用，避免首次遍历发生在语言已切换之后）。
+    ''' </summary>
+    Public Sub LangApplySubTreeSafe(Root As DependencyObject)
+        If Root Is Nothing Then Return
+        Try
+            LangApplySubTree(Root)
+        Catch ex As Exception
             Logger.Error(ex, "应用语言失败", LogBehavior.None)
         End Try
     End Sub
@@ -167,6 +184,10 @@ Public Module ModLanguage
         For Each Child As Object In LogicalTreeHelper.GetChildren(Root)
             Dim Dep As DependencyObject = TryCast(Child, DependencyObject)
             If Dep Is Nothing Then Continue For
+            '先递归处理子节点：MyCard/MyCheckBox 等控件的标题/文本往往由内部 TextBlock 子节点呈现，
+            '若先翻译控件自身再递归，子节点记录的"原始文本"会是翻译后的文本，导致无法切回中文。
+            '先处理子节点可保证首次记录的是 XAML 中文原文。
+            LangApplySubTree(Dep)
             If TypeOf Dep Is TextBlock Then
                 Dim Ctrl = DirectCast(Dep, TextBlock)
                 Ctrl.Text = Lang(GetOriginalText(Ctrl, Ctrl.Text))
@@ -183,7 +204,6 @@ Public Module ModLanguage
                 Dim Ctrl = DirectCast(Dep, MyCard)
                 Ctrl.Title = Lang(GetOriginalText(Ctrl, Ctrl.Title))
             End If
-            LangApplySubTree(Dep)
         Next
     End Sub
 
