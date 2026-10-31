@@ -61,8 +61,11 @@
 
         Dim Card As New MyCard With {.Title = Title, .Margin = New Thickness(0, 0, 0, 12)}
 
-        Dim Stack As New StackPanel With {.Margin = New Thickness(20, 12, 18, 12)}
-        Card.Children.Add(Stack)
+        '内容加入 MyCard 的内容区（MainGrid，即 Children(2)），避免与左上角标题重叠
+        Dim ContentPanel As Panel = TryCast(Card.Children(2), Panel)
+        If ContentPanel Is Nothing Then Return Card
+        Dim Stack As New StackPanel With {.Margin = New Thickness(20, 42, 18, 12)}
+        ContentPanel.Children.Add(Stack)
 
         '作者 / 状态行
         Dim Line1 As String = ""
