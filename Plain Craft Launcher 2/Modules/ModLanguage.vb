@@ -141,24 +141,28 @@ Public Module ModLanguage
             If FrmMain IsNot Nothing Then LangApplySubTree(FrmMain.PanTitle)
             If FrmSetupSystem IsNot Nothing Then LangApplySubTree(FrmSetupSystem.PanMain)
         Catch ex As Exception
-            Logger.Error(ex, "应用语言失败")
+            '语言应用属装饰性操作，失败时静默记录，避免打断启动流程
+            Logger.Error(ex, "应用语言失败", LogBehavior.None)
         End Try
     End Sub
 
     Private Sub LangApplySubTree(Root As DependencyObject)
-        For Each Child As DependencyObject In LogicalTreeHelper.GetChildren(Root)
-            If TypeOf Child Is TextBlock Then
-                DirectCast(Child, TextBlock).Text = Lang(DirectCast(Child, TextBlock).Text)
-            ElseIf TypeOf Child Is MyRadioButton Then
-                DirectCast(Child, MyRadioButton).Text = Lang(DirectCast(Child, MyRadioButton).Text)
-            ElseIf TypeOf Child Is MyCheckBox Then
-                DirectCast(Child, MyCheckBox).Text = Lang(DirectCast(Child, MyCheckBox).Text)
-            ElseIf TypeOf Child Is MyButton Then
-                DirectCast(Child, MyButton).Text = Lang(DirectCast(Child, MyButton).Text)
-            ElseIf TypeOf Child Is MyCard Then
-                DirectCast(Child, MyCard).Title = Lang(DirectCast(Child, MyCard).Title)
+        '逻辑树子节点可能是字符串等非 UI 内容，必须用 TryCast 跳过，否则会抛 InvalidCastException
+        For Each Child As Object In LogicalTreeHelper.GetChildren(Root)
+            Dim Dep As DependencyObject = TryCast(Child, DependencyObject)
+            If Dep Is Nothing Then Continue For
+            If TypeOf Dep Is TextBlock Then
+                DirectCast(Dep, TextBlock).Text = Lang(DirectCast(Dep, TextBlock).Text)
+            ElseIf TypeOf Dep Is MyRadioButton Then
+                DirectCast(Dep, MyRadioButton).Text = Lang(DirectCast(Dep, MyRadioButton).Text)
+            ElseIf TypeOf Dep Is MyCheckBox Then
+                DirectCast(Dep, MyCheckBox).Text = Lang(DirectCast(Dep, MyCheckBox).Text)
+            ElseIf TypeOf Dep Is MyButton Then
+                DirectCast(Dep, MyButton).Text = Lang(DirectCast(Dep, MyButton).Text)
+            ElseIf TypeOf Dep Is MyCard Then
+                DirectCast(Dep, MyCard).Title = Lang(DirectCast(Dep, MyCard).Title)
             End If
-            LangApplySubTree(Child)
+            LangApplySubTree(Dep)
         Next
     End Sub
 
