@@ -211,7 +211,7 @@ Public Module ModLanguage
     Private ReadOnly Translations As Dictionary(Of String, Dictionary(Of String, String)) = New Dictionary(Of String, Dictionary(Of String, String))() From {
         {"zh_CN", New Dictionary(Of String, String)() From {}}, '中文为默认语言，无需翻译
         {"zh_HK", New Dictionary(Of String, String)() From {
-            {"启动", "啟動"}, {"下载", "下載"}, {"联机", "聯機"}, {"设置", "設定"}, {"更多", "更多"},
+            {"启动", "啟動"}, {"下载", "下載"}, {"联机", "聯機"}, {"设置", "設定"}, {"更多", "更多"}, {"插件", "插件"},
             {"全局设置", "全局設定"}, {"语言", "語言"}, {"社区资源", "社群資源"}, {"辅助功能", "輔助功能"},
             {"启动器", "啟動器"}, {"调试选项", "偵錯選項"}, {"文件下载源", "檔案下載來源"}, {"版本列表源", "版本列表來源"},
             {"最大线程数", "最大執行緒數"}, {"速度限制", "速度限制"}, {"目标文件夹", "目標資料夾"}, {"游戏更新提示", "遊戲更新提示"},
@@ -223,7 +223,7 @@ Public Module ModLanguage
             {"关闭", "關閉"}, {"版本", "版本"}, {"整合包", "整合包"}
         }},
         {"zh_TW", New Dictionary(Of String, String)() From {
-            {"启动", "啟動"}, {"下载", "下載"}, {"联机", "連線"}, {"设置", "設定"}, {"更多", "更多"},
+            {"启动", "啟動"}, {"下载", "下載"}, {"联机", "連線"}, {"设置", "設定"}, {"更多", "更多"}, {"插件", "插件"},
             {"全局设置", "全域設定"}, {"语言", "語言"}, {"社区资源", "社群資源"}, {"辅助功能", "輔助功能"},
             {"启动器", "啟動器"}, {"调试选项", "偵錯選項"}, {"文件下载源", "檔案下載來源"}, {"版本列表源", "版本列表來源"},
             {"最大线程数", "最大執行緒數"}, {"速度限制", "速度限制"}, {"目标文件夹", "目標資料夾"}, {"游戏更新提示", "遊戲更新提示"},
@@ -235,10 +235,10 @@ Public Module ModLanguage
             {"关闭", "關閉"}, {"版本", "版本"}, {"整合包", "整合包"}
         }},
         {"zh_MO", New Dictionary(Of String, String)() From {
-            {"启动", "啟動"}, {"下载", "下載"}, {"联机", "聯機"}, {"设置", "設定"}, {"更多", "更多"}
+            {"启动", "啟動"}, {"下载", "下載"}, {"联机", "聯機"}, {"设置", "設定"}, {"更多", "更多"}, {"插件", "插件"}
         }},
         {"en_US", New Dictionary(Of String, String)() From {
-            {"启动", "Launch"}, {"下载", "Download"}, {"联机", "Online"}, {"设置", "Settings"}, {"更多", "More"},
+            {"启动", "Launch"}, {"下载", "Download"}, {"联机", "Online"}, {"设置", "Settings"}, {"更多", "More"}, {"插件", "Plugins"},
             {"全局设置", "Global Settings"}, {"语言", "Language"}, {"社区资源", "Community Resources"}, {"辅助功能", "Accessibility"},
             {"启动器", "Launcher"}, {"调试选项", "Debug Options"}, {"文件下载源", "File Download Source"}, {"版本列表源", "Version List Source"},
             {"最大线程数", "Max Threads"}, {"速度限制", "Speed Limit"}, {"目标文件夹", "Target Folder"}, {"游戏更新提示", "Game Update Notifications"},
@@ -250,7 +250,7 @@ Public Module ModLanguage
             {"关闭", "Close"}, {"版本", "Version"}, {"整合包", "Modpack"}
         }},
         {"en_GB", New Dictionary(Of String, String)() From {
-            {"启动", "Launch"}, {"下载", "Download"}, {"联机", "Online"}, {"设置", "Settings"}, {"更多", "More"},
+            {"启动", "Launch"}, {"下载", "Download"}, {"联机", "Online"}, {"设置", "Settings"}, {"更多", "More"}, {"插件", "Plugins"},
             {"全局设置", "Global Settings"}, {"语言", "Language"}, {"社区资源", "Community Resources"}, {"辅助功能", "Accessibility"},
             {"启动器", "Launcher"}, {"调试选项", "Debug Options"}, {"文件下载源", "File Download Source"}, {"版本列表源", "Version List Source"},
             {"最大线程数", "Max Threads"}, {"速度限制", "Speed Limit"}, {"目标文件夹", "Target Folder"}, {"游戏更新提示", "Game Update Notifications"},
@@ -262,10 +262,10 @@ Public Module ModLanguage
             {"关闭", "Close"}, {"版本", "Version"}, {"整合包", "Modpack"}
         }},
         {"en_AU", New Dictionary(Of String, String)() From {
-            {"启动", "Launch"}, {"下载", "Download"}, {"联机", "Online"}, {"设置", "Settings"}, {"更多", "More"}
+            {"启动", "Launch"}, {"下载", "Download"}, {"联机", "Online"}, {"设置", "Settings"}, {"更多", "More"}, {"插件", "Plugins"}
         }},
         {"ja_JP", New Dictionary(Of String, String)() From {
-            {"启动", "起動"}, {"下载", "ダウンロード"}, {"联机", "マルチ"}, {"设置", "設定"}, {"更多", "その他"},
+            {"启动", "起動"}, {"下载", "ダウンロード"}, {"联机", "マルチ"}, {"设置", "設定"}, {"更多", "その他"}, {"插件", "プラグイン"},
             {"全局设置", "全般設定"}, {"语言", "言語"}, {"社区资源", "コミュニティリソース"}, {"辅助功能", "アクセシビリティ"},
             {"启动器", "ランチャー"}, {"调试选项", "デバッグオプション"}, {"文件下载源", "ファイルダウンロード元"}, {"版本列表源", "バージョンリスト元"},
             {"最大线程数", "最大スレッド数"}, {"速度限制", "速度制限"}, {"目标文件夹", "対象フォルダ"}, {"游戏更新提示", "ゲーム更新通知"},
@@ -277,7 +277,7 @@ Public Module ModLanguage
             {"关闭", "閉じる"}, {"版本", "バージョン"}, {"整合包", "統合パック"}
         }},
         {"ko_KR", New Dictionary(Of String, String)() From {
-            {"启动", "시작"}, {"下载", "다운로드"}, {"联机", "멀티플레이"}, {"设置", "설정"}, {"更多", "더보기"},
+            {"启动", "시작"}, {"下载", "다운로드"}, {"联机", "멀티플레이"}, {"设置", "설정"}, {"更多", "더보기"}, {"插件", "플러그인"},
             {"全局设置", "전역 설정"}, {"语言", "언어"}, {"社区资源", "커뮤니티 리소스"}, {"辅助功能", "접근성"},
             {"启动器", "런처"}, {"调试选项", "디버그 옵션"}, {"文件下载源", "파일 다운로드 소스"}, {"版本列表源", "버전 목록 소스"},
             {"最大线程数", "최대 스레드 수"}, {"速度限制", "속도 제한"}, {"目标文件夹", "대상 폴더"}, {"游戏更新提示", "게임 업데이트 알림"},
@@ -289,7 +289,7 @@ Public Module ModLanguage
             {"关闭", "닫기"}, {"版本", "버전"}, {"整合包", "통합팩"}
         }},
         {"fr_FR", New Dictionary(Of String, String)() From {
-            {"启动", "Lancer"}, {"下载", "Télécharger"}, {"联机", "Multijoueur"}, {"设置", "Paramètres"}, {"更多", "Plus"},
+            {"启动", "Lancer"}, {"下载", "Télécharger"}, {"联机", "Multijoueur"}, {"设置", "Paramètres"}, {"更多", "Plus"}, {"插件", "Plugins"},
             {"全局设置", "Paramètres globaux"}, {"语言", "Langue"}, {"社区资源", "Ressources communautaires"}, {"辅助功能", "Accessibilité"},
             {"启动器", "Lanceur"}, {"调试选项", "Options de débogage"}, {"文件下载源", "Source de téléchargement"}, {"版本列表源", "Source de liste de versions"},
             {"最大线程数", "Threads max"}, {"速度限制", "Limite de vitesse"}, {"目标文件夹", "Dossier cible"}, {"游戏更新提示", "Notifications de mise à jour du jeu"},
@@ -301,7 +301,7 @@ Public Module ModLanguage
             {"关闭", "Fermer"}, {"版本", "Version"}, {"整合包", "Modpack"}
         }},
         {"de_DE", New Dictionary(Of String, String)() From {
-            {"启动", "Start"}, {"下载", "Herunterladen"}, {"联机", "Online"}, {"设置", "Einstellungen"}, {"更多", "Mehr"},
+            {"启动", "Start"}, {"下载", "Herunterladen"}, {"联机", "Online"}, {"设置", "Einstellungen"}, {"更多", "Mehr"}, {"插件", "Plugins"},
             {"全局设置", "Globale Einstellungen"}, {"语言", "Sprache"}, {"社区资源", "Community-Ressourcen"}, {"辅助功能", "Bedienungshilfen"},
             {"启动器", "Launcher"}, {"调试选项", "Debug-Optionen"}, {"文件下载源", "Downloadquelle"}, {"版本列表源", "Versionslistenquelle"},
             {"最大线程数", "Maximale Threads"}, {"速度限制", "Geschwindigkeitslimit"}, {"目标文件夹", "Zielordner"}, {"游戏更新提示", "Spielupdate-Benachrichtigungen"},
@@ -313,7 +313,7 @@ Public Module ModLanguage
             {"关闭", "Schließen"}, {"版本", "Version"}, {"整合包", "Modpack"}
         }},
         {"es_ES", New Dictionary(Of String, String)() From {
-            {"启动", "Iniciar"}, {"下载", "Descargar"}, {"联机", "Multijugador"}, {"设置", "Ajustes"}, {"更多", "Más"},
+            {"启动", "Iniciar"}, {"下载", "Descargar"}, {"联机", "Multijugador"}, {"设置", "Ajustes"}, {"更多", "Más"}, {"插件", "Complementos"},
             {"全局设置", "Ajustes globales"}, {"语言", "Idioma"}, {"社区资源", "Recursos de la comunidad"}, {"辅助功能", "Accesibilidad"},
             {"启动器", "Iniciador"}, {"调试选项", "Opciones de depuración"}, {"文件下载源", "Fuente de descarga"}, {"版本列表源", "Fuente de lista de versiones"},
             {"最大线程数", "Máximo de subprocesos"}, {"速度限制", "Límite de velocidad"}, {"目标文件夹", "Carpeta de destino"}, {"游戏更新提示", "Notificaciones de actualización del juego"},
@@ -325,13 +325,13 @@ Public Module ModLanguage
             {"关闭", "Cerrar"}, {"版本", "Versión"}, {"整合包", "Modpack"}
         }},
         {"es_MX", New Dictionary(Of String, String)() From {
-            {"启动", "Iniciar"}, {"下载", "Descargar"}, {"联机", "Multijugador"}, {"设置", "Ajustes"}, {"更多", "Más"}
+            {"启动", "Iniciar"}, {"下载", "Descargar"}, {"联机", "Multijugador"}, {"设置", "Ajustes"}, {"更多", "Más"}, {"插件", "Complementos"}
         }},
         {"pt_PT", New Dictionary(Of String, String)() From {
-            {"启动", "Iniciar"}, {"下载", "Descarregar"}, {"联机", "Multijogador"}, {"设置", "Definições"}, {"更多", "Mais"}
+            {"启动", "Iniciar"}, {"下载", "Descarregar"}, {"联机", "Multijogador"}, {"设置", "Definições"}, {"更多", "Mais"}, {"插件", "Plugins"}
         }},
         {"pt_BR", New Dictionary(Of String, String)() From {
-            {"启动", "Iniciar"}, {"下载", "Baixar"}, {"联机", "Multijogador"}, {"设置", "Configurações"}, {"更多", "Mais"},
+            {"启动", "Iniciar"}, {"下载", "Baixar"}, {"联机", "Multijogador"}, {"设置", "Configurações"}, {"更多", "Mais"}, {"插件", "Plugins"},
             {"全局设置", "Configurações globais"}, {"语言", "Idioma"}, {"社区资源", "Recursos da comunidade"}, {"辅助功能", "Acessibilidade"},
             {"启动器", "Iniciador"}, {"调试选项", "Opções de depuração"}, {"文件下载源", "Origem de download"}, {"版本列表源", "Origem da lista de versões"},
             {"最大线程数", "Máximo de threads"}, {"速度限制", "Limite de velocidade"}, {"目标文件夹", "Pasta de destino"}, {"游戏更新提示", "Notificações de atualização do jogo"},
@@ -343,7 +343,7 @@ Public Module ModLanguage
             {"关闭", "Fechar"}, {"版本", "Versão"}, {"整合包", "Modpack"}
         }},
         {"ru_RU", New Dictionary(Of String, String)() From {
-            {"启动", "Запуск"}, {"下载", "Скачать"}, {"联机", "Онлайн"}, {"设置", "Настройки"}, {"更多", "Ещё"},
+            {"启动", "Запуск"}, {"下载", "Скачать"}, {"联机", "Онлайн"}, {"设置", "Настройки"}, {"更多", "Ещё"}, {"插件", "Плагины"},
             {"全局设置", "Глобальные настройки"}, {"语言", "Язык"}, {"社区资源", "Ресурсы сообщества"}, {"辅助功能", "Специальные возможности"},
             {"启动器", "Запускатель"}, {"调试选项", "Параметры отладки"}, {"文件下载源", "Источник загрузки файлов"}, {"版本列表源", "Источник списка версий"},
             {"最大线程数", "Максимум потоков"}, {"速度限制", "Ограничение скорости"}, {"目标文件夹", "Целевая папка"}, {"游戏更新提示", "Уведомления об обновлении игры"},
@@ -355,7 +355,7 @@ Public Module ModLanguage
             {"关闭", "Закрыть"}, {"版本", "Версия"}, {"整合包", "Модпак"}
         }},
         {"it_IT", New Dictionary(Of String, String)() From {
-            {"启动", "Avvia"}, {"下载", "Scarica"}, {"联机", "Multigiocatore"}, {"设置", "Impostazioni"}, {"更多", "Altro"},
+            {"启动", "Avvia"}, {"下载", "Scarica"}, {"联机", "Multigiocatore"}, {"设置", "Impostazioni"}, {"更多", "Altro"}, {"插件", "Plugin"},
             {"全局设置", "Impostazioni globali"}, {"语言", "Lingua"}, {"社区资源", "Risorse della community"}, {"辅助功能", "Accessibilità"},
             {"启动器", "Avviatore"}, {"调试选项", "Opzioni di debug"}, {"文件下载源", "Origine download"}, {"版本列表源", "Origine elenco versioni"},
             {"最大线程数", "Thread massimi"}, {"速度限制", "Limite di velocità"}, {"目标文件夹", "Cartella di destinazione"}, {"游戏更新提示", "Notifiche aggiornamento gioco"},
@@ -367,172 +367,172 @@ Public Module ModLanguage
             {"关闭", "Chiudi"}, {"版本", "Versione"}, {"整合包", "Modpack"}
         }},
         {"nl_NL", New Dictionary(Of String, String)() From {
-            {"启动", "Starten"}, {"下载", "Downloaden"}, {"联机", "Online"}, {"设置", "Instellingen"}, {"更多", "Meer"}
+            {"启动", "Starten"}, {"下载", "Downloaden"}, {"联机", "Online"}, {"设置", "Instellingen"}, {"更多", "Meer"}, {"插件", "Plugins"}
         }},
         {"pl_PL", New Dictionary(Of String, String)() From {
-            {"启动", "Uruchom"}, {"下载", "Pobierz"}, {"联机", "Online"}, {"设置", "Ustawienia"}, {"更多", "Więcej"}
+            {"启动", "Uruchom"}, {"下载", "Pobierz"}, {"联机", "Online"}, {"设置", "Ustawienia"}, {"更多", "Więcej"}, {"插件", "Wtyczki"}
         }},
         {"tr_TR", New Dictionary(Of String, String)() From {
-            {"启动", "Başlat"}, {"下载", "İndir"}, {"联机", "Çevrimiçi"}, {"设置", "Ayarlar"}, {"更多", "Daha fazla"}
+            {"启动", "Başlat"}, {"下载", "İndir"}, {"联机", "Çevrimiçi"}, {"设置", "Ayarlar"}, {"更多", "Daha fazla"}, {"插件", "Eklentiler"}
         }},
         {"uk_UA", New Dictionary(Of String, String)() From {
-            {"启动", "Запуск"}, {"下载", "Завантажити"}, {"联机", "Онлайн"}, {"设置", "Налаштування"}, {"更多", "Більше"}
+            {"启动", "Запуск"}, {"下载", "Завантажити"}, {"联机", "Онлайн"}, {"设置", "Налаштування"}, {"更多", "Більше"}, {"插件", "Плагіни"}
         }},
         {"ar_SA", New Dictionary(Of String, String)() From {
-            {"启动", "تشغيل"}, {"下载", "تنزيل"}, {"联机", "عبر الإنترنت"}, {"设置", "الإعدادات"}, {"更多", "المزيد"}
+            {"启动", "تشغيل"}, {"下载", "تنزيل"}, {"联机", "عبر الإنترنت"}, {"设置", "الإعدادات"}, {"更多", "المزيد"}, {"插件", "الإضافات"}
         }},
         {"ar_EG", New Dictionary(Of String, String)() From {
-            {"启动", "تشغيل"}, {"下载", "تنزيل"}, {"联机", "عبر الإنترنت"}, {"设置", "الإعدادات"}, {"更多", "المزيد"}
+            {"启动", "تشغيل"}, {"下载", "تنزيل"}, {"联机", "عبر الإنترنت"}, {"设置", "الإعدادات"}, {"更多", "المزيد"}, {"插件", "الإضافات"}
         }},
         {"he_IL", New Dictionary(Of String, String)() From {
-            {"启动", "הפעלה"}, {"下载", "הורדה"}, {"联机", "מרובה משתתפים"}, {"设置", "הגדרות"}, {"更多", "עוד"}
+            {"启动", "הפעלה"}, {"下载", "הורדה"}, {"联机", "מרובה משתתפים"}, {"设置", "הגדרות"}, {"更多", "עוד"}, {"插件", "תוספים"}
         }},
         {"th_TH", New Dictionary(Of String, String)() From {
-            {"启动", "เปิด"}, {"下载", "ดาวน์โหลด"}, {"联机", "ออนไลน์"}, {"设置", "การตั้งค่า"}, {"更多", "เพิ่มเติม"}
+            {"启动", "เปิด"}, {"下载", "ดาวน์โหลด"}, {"联机", "ออนไลน์"}, {"设置", "การตั้งค่า"}, {"更多", "เพิ่มเติม"}, {"插件", "ปลั๊กอิน"}
         }},
         {"vi_VN", New Dictionary(Of String, String)() From {
-            {"启动", "Khởi động"}, {"下载", "Tải xuống"}, {"联机", "Trực tuyến"}, {"设置", "Cài đặt"}, {"更多", "Khác"}
+            {"启动", "Khởi động"}, {"下载", "Tải xuống"}, {"联机", "Trực tuyến"}, {"设置", "Cài đặt"}, {"更多", "Khác"}, {"插件", "Tiện ích"}
         }},
         {"id_ID", New Dictionary(Of String, String)() From {
-            {"启动", "Mulai"}, {"下载", "Unduh"}, {"联机", "Online"}, {"设置", "Pengaturan"}, {"更多", "Lainnya"}
+            {"启动", "Mulai"}, {"下载", "Unduh"}, {"联机", "Online"}, {"设置", "Pengaturan"}, {"更多", "Lainnya"}, {"插件", "Plugin"}
         }},
         {"ms_MY", New Dictionary(Of String, String)() From {
-            {"启动", "Mula"}, {"下载", "Muat turun"}, {"联机", "Dalam talian"}, {"设置", "Tetapan"}, {"更多", "Lagi"}
+            {"启动", "Mula"}, {"下载", "Muat turun"}, {"联机", "Dalam talian"}, {"设置", "Tetapan"}, {"更多", "Lagi"}, {"插件", "Pemalam"}
         }},
         {"fil_PH", New Dictionary(Of String, String)() From {
-            {"启动", "Simulan"}, {"下载", "I-download"}, {"联机", "Online"}, {"设置", "Mga Setting"}, {"更多", "Higit pa"}
+            {"启动", "Simulan"}, {"下载", "I-download"}, {"联机", "Online"}, {"设置", "Mga Setting"}, {"更多", "Higit pa"}, {"插件", "Mga Plugin"}
         }},
         {"hi_IN", New Dictionary(Of String, String)() From {
-            {"启动", "लॉन्च"}, {"下载", "डाउनलोड"}, {"联机", "ऑनलाइन"}, {"设置", "सेटिंग्स"}, {"更多", "अधिक"}
+            {"启动", "लॉन्च"}, {"下载", "डाउनलोड"}, {"联机", "ऑनलाइन"}, {"设置", "सेटिंग्स"}, {"更多", "अधिक"}, {"插件", "प्लगइन"}
         }},
         {"bn_BD", New Dictionary(Of String, String)() From {
-            {"启动", "চালু"}, {"下载", "ডাউনলোড"}, {"联机", "অনলাইন"}, {"设置", "সেটিংস"}, {"更多", "আরও"}
+            {"启动", "চালু"}, {"下载", "ডাউনলোড"}, {"联机", "অনলাইন"}, {"设置", "সেটিংস"}, {"更多", "আরও"}, {"插件", "প্লাগইন"}
         }},
         {"ta_IN", New Dictionary(Of String, String)() From {
-            {"启动", "தொடங்கு"}, {"下载", "பதிவிறக்கம்"}, {"联机", "ஆன்லைன்"}, {"设置", "அமைப்புகள்"}, {"更多", "மேலும்"}
+            {"启动", "தொடங்கு"}, {"下载", "பதிவிறக்கம்"}, {"联机", "ஆன்லைன்"}, {"设置", "அமைப்புகள்"}, {"更多", "மேலும்"}, {"插件", "செருகுநிரல்"}
         }},
         {"te_IN", New Dictionary(Of String, String)() From {
-            {"启动", "ప్రారంభించు"}, {"下载", "డౌన్లోడ్"}, {"联机", "ఆన్లైన్"}, {"设置", "సెట్టింగ్లు"}, {"更多", "మరిన్ని"}
+            {"启动", "ప్రారంభించు"}, {"下载", "డౌన్లోడ్"}, {"联机", "ఆన్లైన్"}, {"设置", "సెట్టింగ్లు"}, {"更多", "మరిన్ని"}, {"插件", "ప్లగిన్"}
         }},
         {"mr_IN", New Dictionary(Of String, String)() From {
-            {"启动", "लाँच"}, {"下载", "डाउनलोड"}, {"联机", "ऑनलाइन"}, {"设置", "सेटिंग्ज"}, {"更多", "अधिक"}
+            {"启动", "लाँच"}, {"下载", "डाउनलोड"}, {"联机", "ऑनलाइन"}, {"设置", "सेटिंग्ज"}, {"更多", "अधिक"}, {"插件", "प्लगइन"}
         }},
         {"gu_IN", New Dictionary(Of String, String)() From {
-            {"启动", "લોંચ"}, {"下载", "ડાઉનલોડ"}, {"联机", "ઑનલાઇન"}, {"设置", "સેટિંગ્સ"}, {"更多", "વધુ"}
+            {"启动", "લોંચ"}, {"下载", "ડાઉનલોડ"}, {"联机", "ઑનલાઇન"}, {"设置", "સેટિંગ્સ"}, {"更多", "વધુ"}, {"插件", "પ્લગઇન"}
         }},
         {"kn_IN", New Dictionary(Of String, String)() From {
-            {"启动", "ಪ್ರಾರಂಭಿಸು"}, {"下载", "ಡೌನ್ಲೋಡ್"}, {"联机", "ಆನ್ಲೈನ್"}, {"设置", "ಸೆಟ್ಟಿಂಗ್ಗಳು"}, {"更多", "ಹೆಚ್ಚು"}
+            {"启动", "ಪ್ರಾರಂಭಿಸು"}, {"下载", "ಡೌನ್ಲೋಡ್"}, {"联机", "ಆನ್ಲೈನ್"}, {"设置", "ಸೆಟ್ಟಿಂಗ್ಗಳು"}, {"更多", "ಹೆಚ್ಚು"}, {"插件", "ಪ್ಲಗಿನ್"}
         }},
         {"ml_IN", New Dictionary(Of String, String)() From {
-            {"启动", "ആരംഭിക്കുക"}, {"下载", "ഡൗൺലോഡ്"}, {"联机", "ഓൺലൈൻ"}, {"设置", "ക്രമീകരണങ്ങൾ"}, {"更多", "കൂടുതൽ"}
+            {"启动", "ആരംഭിക്കുക"}, {"下载", "ഡൗൺലോഡ്"}, {"联机", "ഓൺലൈൻ"}, {"设置", "ക്രമീകരണങ്ങൾ"}, {"更多", "കൂടുതൽ"}, {"插件", "പ്ലഗിൻ"}
         }},
         {"pa_IN", New Dictionary(Of String, String)() From {
-            {"启动", "ਲਾਂਚ"}, {"下载", "ਡਾਊਨਲੋਡ"}, {"联机", "ਆਨਲਾਈਨ"}, {"设置", "ਸੈਟਿੰਗਾਂ"}, {"更多", "ਹੋਰ"}
+            {"启动", "ਲਾਂਚ"}, {"下载", "ਡਾਊਨਲੋਡ"}, {"联机", "ਆਨਲਾਈਨ"}, {"设置", "ਸੈਟਿੰਗਾਂ"}, {"更多", "ਹੋਰ"}, {"插件", "ਪਲੱਗਇਨ"}
         }},
         {"ne_NP", New Dictionary(Of String, String)() From {
-            {"启动", "सुरु"}, {"下载", "डाउनलोड"}, {"联机", "अनलाइन"}, {"设置", "सेटिङ"}, {"更多", "थप"}
+            {"启动", "सुरु"}, {"下载", "डाउनलोड"}, {"联机", "अनलाइन"}, {"设置", "सेटिङ"}, {"更多", "थप"}, {"插件", "प्लगइन"}
         }},
         {"si_LK", New Dictionary(Of String, String)() From {
-            {"启动", "අරඹන්න"}, {"下载", "බාගත"}, {"联机", "සබැඳි"}, {"设置", "සැකසුම්"}, {"更多", "තවත්"}
+            {"启动", "අරඹන්න"}, {"下载", "බාගත"}, {"联机", "සබැඳි"}, {"设置", "සැකසුම්"}, {"更多", "තවත්"}, {"插件", "ප්ලගිනය"}
         }},
         {"ur_PK", New Dictionary(Of String, String)() From {
-            {"启动", "لانچ"}, {"下载", "ڈاؤن لوڈ"}, {"联机", "آن لائن"}, {"设置", "ترتیبات"}, {"更多", "مزید"}
+            {"启动", "لانچ"}, {"下载", "ڈاؤن لوڈ"}, {"联机", "آن لائن"}, {"设置", "ترتیبات"}, {"更多", "مزید"}, {"插件", "پلگ ان"}
         }},
         {"fa_IR", New Dictionary(Of String, String)() From {
-            {"启动", "راه‌اندازی"}, {"下载", "دانلود"}, {"联机", "آنلاین"}, {"设置", "تنظیمات"}, {"更多", "بیشتر"}
+            {"启动", "راه‌اندازی"}, {"下载", "دانلود"}, {"联机", "آنلاین"}, {"设置", "تنظیمات"}, {"更多", "بیشتر"}, {"插件", "افزونه"}
         }},
         {"cs_CZ", New Dictionary(Of String, String)() From {
-            {"启动", "Spustit"}, {"下载", "Stáhnout"}, {"联机", "Online"}, {"设置", "Nastavení"}, {"更多", "Více"}
+            {"启动", "Spustit"}, {"下载", "Stáhnout"}, {"联机", "Online"}, {"设置", "Nastavení"}, {"更多", "Více"}, {"插件", "Doplňky"}
         }},
         {"sk_SK", New Dictionary(Of String, String)() From {
-            {"启动", "Spustiť"}, {"下载", "Stiahnuť"}, {"联机", "Online"}, {"设置", "Nastavenia"}, {"更多", "Viac"}
+            {"启动", "Spustiť"}, {"下载", "Stiahnuť"}, {"联机", "Online"}, {"设置", "Nastavenia"}, {"更多", "Viac"}, {"插件", "Doplnky"}
         }},
         {"hu_HU", New Dictionary(Of String, String)() From {
-            {"启动", "Indítás"}, {"下载", "Letöltés"}, {"联机", "Online"}, {"设置", "Beállítások"}, {"更多", "Több"}
+            {"启动", "Indítás"}, {"下载", "Letöltés"}, {"联机", "Online"}, {"设置", "Beállítások"}, {"更多", "Több"}, {"插件", "Bővítmények"}
         }},
         {"ro_RO", New Dictionary(Of String, String)() From {
-            {"启动", "Pornire"}, {"下载", "Descărcare"}, {"联机", "Online"}, {"设置", "Setări"}, {"更多", "Mai mult"}
+            {"启动", "Pornire"}, {"下载", "Descărcare"}, {"联机", "Online"}, {"设置", "Setări"}, {"更多", "Mai mult"}, {"插件", "Pluginuri"}
         }},
         {"bg_BG", New Dictionary(Of String, String)() From {
-            {"启动", "Старт"}, {"下载", "Изтегляне"}, {"联机", "Онлайн"}, {"设置", "Настройки"}, {"更多", "Още"}
+            {"启动", "Старт"}, {"下载", "Изтегляне"}, {"联机", "Онлайн"}, {"设置", "Настройки"}, {"更多", "Още"}, {"插件", "Приставки"}
         }},
         {"hr_HR", New Dictionary(Of String, String)() From {
-            {"启动", "Pokreni"}, {"下载", "Preuzmi"}, {"联机", "Online"}, {"设置", "Postavke"}, {"更多", "Više"}
+            {"启动", "Pokreni"}, {"下载", "Preuzmi"}, {"联机", "Online"}, {"设置", "Postavke"}, {"更多", "Više"}, {"插件", "Dodaci"}
         }},
         {"sr_RS", New Dictionary(Of String, String)() From {
-            {"启动", "Покрени"}, {"下载", "Преузимање"}, {"联机", "Онлајн"}, {"设置", "Подешавања"}, {"更多", "Више"}
+            {"启动", "Покрени"}, {"下载", "Преузимање"}, {"联机", "Онлајн"}, {"设置", "Подешавања"}, {"更多", "Више"}, {"插件", "Додаци"}
         }},
         {"sl_SI", New Dictionary(Of String, String)() From {
-            {"启动", "Zaženi"}, {"下载", "Prenesi"}, {"联机", "Splet"}, {"设置", "Nastavitve"}, {"更多", "Več"}
+            {"启动", "Zaženi"}, {"下载", "Prenesi"}, {"联机", "Splet"}, {"设置", "Nastavitve"}, {"更多", "Več"}, {"插件", "Vtičniki"}
         }},
         {"lt_LT", New Dictionary(Of String, String)() From {
-            {"启动", "Paleisti"}, {"下载", "Atsisiųsti"}, {"联机", "Internetas"}, {"设置", "Nustatymai"}, {"更多", "Daugiau"}
+            {"启动", "Paleisti"}, {"下载", "Atsisiųsti"}, {"联机", "Internetas"}, {"设置", "Nustatymai"}, {"更多", "Daugiau"}, {"插件", "Papildiniai"}
         }},
         {"lv_LV", New Dictionary(Of String, String)() From {
-            {"启动", "Palaišana"}, {"下载", "Lejupielādēt"}, {"联机", "Tiešsaiste"}, {"设置", "Iestatījumi"}, {"更多", "Vairāk"}
+            {"启动", "Palaišana"}, {"下载", "Lejupielādēt"}, {"联机", "Tiešsaiste"}, {"设置", "Iestatījumi"}, {"更多", "Vairāk"}, {"插件", "Spraudņi"}
         }},
         {"et_EE", New Dictionary(Of String, String)() From {
-            {"启动", "Käivita"}, {"下载", "Allalaadimine"}, {"联机", "Võrgus"}, {"设置", "Seaded"}, {"更多", "Rohkem"}
+            {"启动", "Käivita"}, {"下载", "Allalaadimine"}, {"联机", "Võrgus"}, {"设置", "Seaded"}, {"更多", "Rohkem"}, {"插件", "Lisandmoodulid"}
         }},
         {"el_GR", New Dictionary(Of String, String)() From {
-            {"启动", "Εκκίνηση"}, {"下载", "Λήψη"}, {"联机", "Διαδίκτυο"}, {"设置", "Ρυθμίσεις"}, {"更多", "Περισσότερα"}
+            {"启动", "Εκκίνηση"}, {"下载", "Λήψη"}, {"联机", "Διαδίκτυο"}, {"设置", "Ρυθμίσεις"}, {"更多", "Περισσότερα"}, {"插件", "Πρόσθετα"}
         }},
         {"da_DK", New Dictionary(Of String, String)() From {
-            {"启动", "Start"}, {"下载", "Hent"}, {"联机", "Online"}, {"设置", "Indstillinger"}, {"更多", "Mere"}
+            {"启动", "Start"}, {"下载", "Hent"}, {"联机", "Online"}, {"设置", "Indstillinger"}, {"更多", "Mere"}, {"插件", "Plugins"}
         }},
         {"sv_SE", New Dictionary(Of String, String)() From {
-            {"启动", "Starta"}, {"下载", "Ladda ner"}, {"联机", "Online"}, {"设置", "Inställningar"}, {"更多", "Mer"}
+            {"启动", "Starta"}, {"下载", "Ladda ner"}, {"联机", "Online"}, {"设置", "Inställningar"}, {"更多", "Mer"}, {"插件", "Plugins"}
         }},
         {"nb_NO", New Dictionary(Of String, String)() From {
-            {"启动", "Start"}, {"下载", "Last ned"}, {"联机", "Online"}, {"设置", "Innstillinger"}, {"更多", "Mer"}
+            {"启动", "Start"}, {"下载", "Last ned"}, {"联机", "Online"}, {"设置", "Innstillinger"}, {"更多", "Mer"}, {"插件", "Plugins"}
         }},
         {"fi_FI", New Dictionary(Of String, String)() From {
-            {"启动", "Käynnistä"}, {"下载", "Lataa"}, {"联机", "Verkko"}, {"设置", "Asetukset"}, {"更多", "Lisää"}
+            {"启动", "Käynnistä"}, {"下载", "Lataa"}, {"联机", "Verkko"}, {"设置", "Asetukset"}, {"更多", "Lisää"}, {"插件", "Laajennukset"}
         }},
         {"is_IS", New Dictionary(Of String, String)() From {
-            {"启动", "Ræsa"}, {"下载", "Sækja"}, {"联机", "Net"}, {"设置", "Stillingar"}, {"更多", "Meira"}
+            {"启动", "Ræsa"}, {"下载", "Sækja"}, {"联机", "Net"}, {"设置", "Stillingar"}, {"更多", "Meira"}, {"插件", "Viðbætur"}
         }},
         {"ga_IE", New Dictionary(Of String, String)() From {
-            {"启动", "Seoladh"}, {"下载", "Íoslódáil"}, {"联机", "Ar Líne"}, {"设置", "Socruithe"}, {"更多", "Tuilleadh"}
+            {"启动", "Seoladh"}, {"下载", "Íoslódáil"}, {"联机", "Ar Líne"}, {"设置", "Socruithe"}, {"更多", "Tuilleadh"}, {"插件", "Breiseáin"}
         }},
         {"cy_GB", New Dictionary(Of String, String)() From {
-            {"启动", "Cychwyn"}, {"下载", "Lawrlwytho"}, {"联机", "Ar-lein"}, {"设置", "Gosodiadau"}, {"更多", "Mwy"}
+            {"启动", "Cychwyn"}, {"下载", "Lawrlwytho"}, {"联机", "Ar-lein"}, {"设置", "Gosodiadau"}, {"更多", "Mwy"}, {"插件", "Ategion"}
         }},
         {"eu_ES", New Dictionary(Of String, String)() From {
-            {"启动", "Abiarazi"}, {"下载", "Deskargatu"}, {"联机", "Linean"}, {"设置", "Ezarpenak"}, {"更多", "Gehiago"}
+            {"启动", "Abiarazi"}, {"下载", "Deskargatu"}, {"联机", "Linean"}, {"设置", "Ezarpenak"}, {"更多", "Gehiago"}, {"插件", "Pluginak"}
         }},
         {"ca_ES", New Dictionary(Of String, String)() From {
-            {"启动", "Inicia"}, {"下载", "Baixa"}, {"联机", "En línia"}, {"设置", "Configuració"}, {"更多", "Més"}
+            {"启动", "Inicia"}, {"下载", "Baixa"}, {"联机", "En línia"}, {"设置", "Configuració"}, {"更多", "Més"}, {"插件", "Complements"}
         }},
         {"gl_ES", New Dictionary(Of String, String)() From {
-            {"启动", "Iniciar"}, {"下载", "Descargar"}, {"联机", "En liña"}, {"设置", "Axustes"}, {"更多", "Máis"}
+            {"启动", "Iniciar"}, {"下载", "Descargar"}, {"联机", "En liña"}, {"设置", "Axustes"}, {"更多", "Máis"}, {"插件", "Enganches"}
         }},
         {"az_AZ", New Dictionary(Of String, String)() From {
-            {"启动", "Başlat"}, {"下载", "Endir"}, {"联机", "Onlayn"}, {"设置", "Parametrlər"}, {"更多", "Daha çox"}
+            {"启动", "Başlat"}, {"下载", "Endir"}, {"联机", "Onlayn"}, {"设置", "Parametrlər"}, {"更多", "Daha çox"}, {"插件", "Qoşmalar"}
         }},
         {"kk_KZ", New Dictionary(Of String, String)() From {
-            {"启动", "Іске қосу"}, {"下载", "Жүктеу"}, {"联机", "Онлайн"}, {"设置", "Баптаулар"}, {"更多", "Тағы"}
+            {"启动", "Іске қосу"}, {"下载", "Жүктеу"}, {"联机", "Онлайн"}, {"设置", "Баптаулар"}, {"更多", "Тағы"}, {"插件", "Плагиндер"}
         }},
         {"uz_UZ", New Dictionary(Of String, String)() From {
-            {"启动", "Ishga tushirish"}, {"下载", "Yuklab olish"}, {"联机", "Onlayn"}, {"设置", "Sozlamalar"}, {"更多", "Ko'proq"}
+            {"启动", "Ishga tushirish"}, {"下载", "Yuklab olish"}, {"联机", "Onlayn"}, {"设置", "Sozlamalar"}, {"更多", "Ko'proq"}, {"插件", "Plaginlar"}
         }},
         {"hy_AM", New Dictionary(Of String, String)() From {
-            {"启动", "Գործարկել"}, {"下载", "Ներբեռնել"}, {"联机", "Առցանց"}, {"设置", "Կարգավորումներ"}, {"更多", "Ավելին"}
+            {"启动", "Գործարկել"}, {"下载", "Ներբեռնել"}, {"联机", "Առցանց"}, {"设置", "Կարգավորումներ"}, {"更多", "Ավելին"}, {"插件", "Փլագիններ"}
         }},
         {"ka_GE", New Dictionary(Of String, String)() From {
-            {"启动", "გაშვება"}, {"下载", "ჩამოტვირთვა"}, {"联机", "ონლაინ"}, {"设置", "პარამეტრები"}, {"更多", "მეტი"}
+            {"启动", "გაშვება"}, {"下载", "ჩამოტვირთვა"}, {"联机", "ონლაინ"}, {"设置", "პარამეტრები"}, {"更多", "მეტი"}, {"插件", "დანამატები"}
         }},
         {"sw_KE", New Dictionary(Of String, String)() From {
-            {"启动", "Anzisha"}, {"下载", "Pakua"}, {"联机", "Mtandaoni"}, {"设置", "Mipangilio"}, {"更多", "Zaidi"}
+            {"启动", "Anzisha"}, {"下载", "Pakua"}, {"联机", "Mtandaoni"}, {"设置", "Mipangilio"}, {"更多", "Zaidi"}, {"插件", "Programu-jalizi"}
         }},
         {"af_ZA", New Dictionary(Of String, String)() From {
-            {"启动", "Begin"}, {"下载", "Aflaai"}, {"联机", "Aanlyn"}, {"设置", "Instellings"}, {"更多", "Meer"}
+            {"启动", "Begin"}, {"下载", "Aflaai"}, {"联机", "Aanlyn"}, {"设置", "Instellings"}, {"更多", "Meer"}, {"插件", "Inproppings"}
         }},
         {"sq_AL", New Dictionary(Of String, String)() From {
-            {"启动", "Nis"}, {"下载", "Shkarko"}, {"联机", "Online"}, {"设置", "Cilësimet"}, {"更多", "Më shumë"}
+            {"启动", "Nis"}, {"下载", "Shkarko"}, {"联机", "Online"}, {"设置", "Cilësimet"}, {"更多", "Më shumë"}, {"插件", "Shtesa"}
         }},
         {"mk_MK", New Dictionary(Of String, String)() From {
-            {"启动", "Старт"}, {"下载", "Преземи"}, {"联机", "Онлајн"}, {"设置", "Поставки"}, {"更多", "Повеќе"}
+            {"启动", "Старт"}, {"下载", "Преземи"}, {"联机", "Онлајн"}, {"设置", "Поставки"}, {"更多", "Повеќе"}, {"插件", "Приклучоци"}
         }}
     }
 

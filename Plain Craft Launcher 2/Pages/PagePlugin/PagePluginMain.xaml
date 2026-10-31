@@ -1,0 +1,41 @@
+﻿<local:MyPageRight
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             mc:Ignorable="d" x:Class="PagePluginMain"
+             d:DesignWidth="800" d:DesignHeight="800">
+    <Grid>
+        <Grid x:Name="PanListRoot">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="1*" />
+                <RowDefinition Height="8" />
+            </Grid.RowDefinitions>
+            <local:MyCard Grid.Row="0" x:Name="CardHeader" Margin="15,12,15,0" CornerRadius="10">
+                <StackPanel x:Name="PanHeaderContent" Margin="16,13,16,13">
+                    <TextBlock x:Name="LabHeaderTitle" FontSize="17" Foreground="{DynamicResource ColorBrush3}" Text="插件" />
+                    <TextBlock x:Name="LabHeaderDesc" FontSize="13" LineHeight="18" TextWrapping="Wrap" Margin="0,6,0,0"
+                               Foreground="{StaticResource ColorBrushGray3}" Text="将插件 DLL 放入 plugins 文件夹后，点击下方『重新扫描』即可加载。" />
+                    <TextBlock x:Name="LabHeaderDir" FontSize="12" Margin="0,5,0,0" Foreground="{StaticResource ColorBrushGray2}" Text="" />
+                </StackPanel>
+            </local:MyCard>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="15,15,15,0">
+                <StackPanel x:Name="PanList" />
+            </ScrollViewer>
+        </Grid>
+        <Grid x:Name="PanHostRoot" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="1*" />
+            </Grid.RowDefinitions>
+            <local:MyCard Grid.Row="0" Margin="15,12,15,0" CornerRadius="10">
+                <StackPanel x:Name="PanHostHeader" Margin="10,6,10,6" Orientation="Horizontal">
+                    <local:MyListItem x:Name="ItemBack" Type="Clickable" Title="返回插件列表" Height="34" MinPaddingRight="15" IsScaleAnimationEnabled="False" />
+                    <TextBlock x:Name="LabHostTitle" VerticalAlignment="Center" Margin="15,0,0,0" FontSize="15"
+                               Foreground="{DynamicResource ColorBrush3}" Text="插件页面" />
+                </StackPanel>
+            </local:MyCard>
+            <Grid x:Name="PanHostContent" Grid.Row="1" Margin="15,15,15,8" />
+        </Grid>
+    </Grid>
+</local:MyPageRight>
