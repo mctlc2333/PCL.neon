@@ -5,6 +5,8 @@
 ' 3. 主界面顶部导航（启动/下载/联机/设置/更多）在 73 种语言下均有翻译；设置页标签与常见按钮在主要语言下有翻译。
 ' 4. 更换语言时遍历当前可见 UI 子树即时应用；重启后按已保存语言自动应用。
 
+Imports System.Runtime.CompilerServices
+
 Public Structure LanguageEntry
     Public Code As String
     Public Name As String
@@ -146,21 +148,40 @@ Public Module ModLanguage
         End Try
     End Sub
 
+    ''' <summary>
+    ''' 控件原始文本记录：首次应用语言时记录控件最初的文本（XAML 中文原文），
+    ''' 之后始终基于原文翻译。避免“已翻译文本不在翻译表导致无法切回中文 / 多次切换语言混杂”。
+    ''' 使用弱引用表，设置页反复打开不会泄漏控件。
+    ''' </summary>
+    Private OriginalTexts As New ConditionalWeakTable(Of DependencyObject, String)()
+
+    ''' <summary>
+    ''' 取控件原始文本；首次遇到时记录当前文本作为原始文本。
+    ''' </summary>
+    Private Function GetOriginalText(ctrl As DependencyObject, current As String) As String
+        Return OriginalTexts.GetValue(ctrl, Function(c) current)
+    End Function
+
     Private Sub LangApplySubTree(Root As DependencyObject)
         '逻辑树子节点可能是字符串等非 UI 内容，必须用 TryCast 跳过，否则会抛 InvalidCastException
         For Each Child As Object In LogicalTreeHelper.GetChildren(Root)
             Dim Dep As DependencyObject = TryCast(Child, DependencyObject)
             If Dep Is Nothing Then Continue For
             If TypeOf Dep Is TextBlock Then
-                DirectCast(Dep, TextBlock).Text = Lang(DirectCast(Dep, TextBlock).Text)
+                Dim Ctrl = DirectCast(Dep, TextBlock)
+                Ctrl.Text = Lang(GetOriginalText(Ctrl, Ctrl.Text))
             ElseIf TypeOf Dep Is MyRadioButton Then
-                DirectCast(Dep, MyRadioButton).Text = Lang(DirectCast(Dep, MyRadioButton).Text)
+                Dim Ctrl = DirectCast(Dep, MyRadioButton)
+                Ctrl.Text = Lang(GetOriginalText(Ctrl, Ctrl.Text))
             ElseIf TypeOf Dep Is MyCheckBox Then
-                DirectCast(Dep, MyCheckBox).Text = Lang(DirectCast(Dep, MyCheckBox).Text)
+                Dim Ctrl = DirectCast(Dep, MyCheckBox)
+                Ctrl.Text = Lang(GetOriginalText(Ctrl, Ctrl.Text))
             ElseIf TypeOf Dep Is MyButton Then
-                DirectCast(Dep, MyButton).Text = Lang(DirectCast(Dep, MyButton).Text)
+                Dim Ctrl = DirectCast(Dep, MyButton)
+                Ctrl.Text = Lang(GetOriginalText(Ctrl, Ctrl.Text))
             ElseIf TypeOf Dep Is MyCard Then
-                DirectCast(Dep, MyCard).Title = Lang(DirectCast(Dep, MyCard).Title)
+                Dim Ctrl = DirectCast(Dep, MyCard)
+                Ctrl.Title = Lang(GetOriginalText(Ctrl, Ctrl.Title))
             End If
             LangApplySubTree(Dep)
         Next
