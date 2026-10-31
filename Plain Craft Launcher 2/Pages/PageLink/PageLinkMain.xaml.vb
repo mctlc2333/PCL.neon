@@ -1,11 +1,13 @@
 Imports System.Collections.ObjectModel
 Imports System.Globalization
+Imports System.IO
+Imports System.IO.Compression
+Imports System.Net
 Imports System.Net.Sockets
 Imports System.Reflection
 Imports PCL
 
 Public Class PageLinkMain
-    Private Const INVITE_CODE_VERSION As Integer = 2
 
     '===============================
     '  状态机与前端页面
@@ -91,28 +93,10 @@ Public Class PageLinkMain
     '  页面 UI
     '===============================
 
-    '创建
+    '创建（陶瓦联机：直接在游戏内“对局域网开放”，无需输入端口）
     Private Sub Create_MouseLeftButtonUp() Handles PanSelectCreate.MouseLeftButtonUp
-        '输入端口号
-        Dim Port As String = MyMsgBoxInput("输入端口", $"在单人游戏的暂停菜单选择 {vbLQ}对局域网开放{vbRQ}，然后输入端口数字。{vbCrLf}甚至可以输入其他游戏的端口……嗯……",
-            ValidateRules:=New Collection(Of Validate) From {New ValidateInteger(1024, 65535)},
-            HintText:="端口号")
-        If Port Is Nothing Then Return
-        '基础信息
         IsServerSide = True
-        ServerPort = Port
-        Dim GenerateRandomCode =
-        Function() As String
-            Dim Result As String = ""
-            For i = 1 To 5
-                Result &= RandomInteger(0, 35).ConvertRadix(36)
-            Next
-            Return Result.Replace("O", "0").Replace("I", "1")
-        End Function
-        NetworkName = $"P{ServerPort.ConvertRadix(16).PadLeft(4, "0"c)}-{GenerateRandomCode()}"
-        NetworkSecret = GenerateRandomCode()
-        DiscoverNodeID = -1
-        Logger.Info($"尝试创建房间，网络名 {NetworkName}，网络密码 {NetworkSecret}，端口 {ServerPort}")
+        Logger.Info("尝试创建陶瓦联机房间")
         '启动
         ChangeState(LinkStates.Loading)
     End Sub
@@ -120,11 +104,11 @@ Public Class PageLinkMain
     '加入
     Private Shared LastCode As String = Nothing
     ''' <summary>
-    ''' 输入邀请码，切换到联机页并立即加入房间。
+    ''' 输入房间码，切换到联机页并立即加入房间。
     ''' </summary>
     Public Shared Sub Join() Handles PanSelectJoin.MouseLeftButtonUp
-        Dim Code As String = MyMsgBoxInput("输入邀请码", "输入房主发给你的邀请码。",
-            HintText:=If(String.IsNullOrEmpty(LastCode), "", "使用上一次的邀请码"))
+        Dim Code As String = MyMsgBoxInput("输入房间码", "输入房主发给你的房间码。",
+            HintText:=If(String.IsNullOrEmpty(LastCode), "", "使用上一次的房间码"))
         If Not String.IsNullOrEmpty(LastCode) AndAlso Code IsNot Nothing AndAlso Code = "" Then Code = LastCode
         If Code Is Nothing Then Return
         Join(Code)
@@ -138,48 +122,23 @@ Public Class PageLinkMain
             Return
         End If
         Code = FixCodeFormat(Code)
-        Logger.Info($"实际使用的邀请码：{Code}")
+        Logger.Info($"实际使用的房间码：{Code}")
         '基础信息
         IsServerSide = False
-        ServerPort = Code.Substring(1, 4).Upper.ConvertRadix(16, 10)
-        NetworkName = Code.Substring(0, 11)
-        NetworkSecret = Code.Substring(12, 5)
-        If Code.Substring(20, 3) = "000" Then
-            DiscoverNodeID = -2
-        Else
-            DiscoverNodeID = Code.Substring(20, 3).Upper.ConvertRadix(16, 10)
-        End If
-        Logger.Info($"尝试加入房间，网络名 {NetworkName}，网络密码 {NetworkSecret}，端口 {ServerPort}，发现节点 {DiscoverNodeID}")
+        RoomCode = Code
         '启动
         LastCode = Code
         ChangeState(LinkStates.Loading)
     End Sub
     Public Shared Function ValidateCodeFormat(Code As String) As String
-        If Code Is Nothing Then Return "邀请码为空！"
+        If Code Is Nothing Then Return "房间码为空！"
         Code = FixCodeFormat(Code)
-        '判断类型
-        If Not (Code.Length >= 14 AndAlso Code(0) = "P"c AndAlso Code(5) = "-"c AndAlso Code(11) = "-"c) Then
-            If Code.StartsWithF("U/") Then 'HMCL
-                Return "请让房主使用 PCL 创建房间！"
-            ElseIf Code.Length = 10 Then 'PCL CE
-                Return "请让房主使用非社区版的 PCL 创建房间！"
-            Else
-                Return "邀请码有误，请让房主使用 PCL 创建房间！"
-            End If
-        End If
-        '校验版本
-        If Code.Length >= 23 AndAlso Code(17) = "-"c AndAlso
-            Val(Code.Substring(18, 2)) > INVITE_CODE_VERSION Then Return "你的 PCL 版本太老了，请在更新 PCL 之后再联机！"
+        If Code.Length < 4 Then Return "房间码有误，请让房主使用陶瓦联机创建房间！"
         Return Nothing
     End Function
     Private Shared Function FixCodeFormat(Code As String) As String
         Code = Code.Between("【", "】").Between("[", "]") '从完整消息中提取
-        Code = Code.Upper.Replace("O", "0").Replace("I", "1") '输入修正
-        '版本 1 兼容
-        If Code.Length >= 17 AndAlso (Code.Length < 23 OrElse (Code.Length >= 18 AndAlso Code(17) <> "-"c)) Then
-            Code = Code.Substring(0, 17) & "-0105E"
-        End If
-        Return Code
+        Return Code.Trim()
     End Function
 
     '自动加入
@@ -212,8 +171,7 @@ Public Class PageLinkMain
     '由 Waiting 或 Failed 状态切换到 Loading
     Private Sub SwitchToLoading(OldState As LinkStates)
         '清理变量
-        Peers = Nothing
-        FailCount = 0
+        PeopleCountValue = 0
         '加载器与进程状态
         LinkLoader.Start(IsForceRestart:=True)
         '页面切换会由 Loader 调用 MyPageRight 来触发
@@ -303,22 +261,21 @@ Public Class PageLinkMain
         'UI 更新
         If IsServerSide Then
             LabFinishTitle.Text = "已创建房间"
-            LabFinishDesc.Text = $"把邀请码发给朋友，让大家加入房间吧！{vbCrLf}邀请码：{GetInviteCode()}"
+            LabFinishDesc.Text = $"把房间码发给朋友，让大家加入房间吧！{vbCrLf}房间码：{GetInviteCode()}"
             BtnFinishExit.Text = "关闭"
-            BtnFinishPing.ToolTip = "网络延迟"
+            BtnFinishPing.ToolTip = "联机状态"
             BtnFinishCopy.Visibility = Visibility.Visible
-            Copy() '立即复制邀请码
+            Copy() '立即复制房间码
             '下边栏
-            BtnFinishPort.Visibility = Visibility.Visible
-            LabFinishPort.Visibility = Visibility.Visible
+            BtnFinishPort.Visibility = Visibility.Collapsed
+            LabFinishPort.Visibility = Visibility.Collapsed
             BtnFinishIp.Visibility = Visibility.Collapsed
             LabFinishIp.Visibility = Visibility.Collapsed
-            LabFinishPort.Text = ServerPort
         Else
             LabFinishTitle.Text = "已加入房间"
-            LabFinishDesc.Text = $"在多人游戏页面的最下方就能找到联机房间！{vbCrLf}注意：使用离线登录时不要手动输入 IP！"
+            LabFinishDesc.Text = $"在多人游戏服务器地址填入下面的地址，即可进入房主的游戏！{vbCrLf}注意：使用离线登录时不要手动输入其他 IP！"
             BtnFinishExit.Text = "离开"
-            BtnFinishPing.ToolTip = "与房主的延迟"
+            BtnFinishPing.ToolTip = "联机状态"
             BtnFinishCopy.Visibility = Visibility.Collapsed
             '下边栏
             BtnFinishPort.Visibility = Visibility.Collapsed
@@ -345,8 +302,8 @@ Public Class PageLinkMain
     Public Function TryExit(Silent As Boolean, Closing As Boolean) As Boolean
         If LinkState = LinkStates.Waiting OrElse LinkState = LinkStates.Failed Then Return False
         If Not Silent Then
-            If IsServerSide AndAlso PeopleCount > 1 Then
-                If MyMsgBox("你确定要关闭联机房间吗？" & vbCrLf & "所有玩家都需要重新输入邀请码才可加入游戏！", "退出联机", "确定", "取消", IsWarn:=True) = 2 Then Return True
+            If IsServerSide AndAlso PeopleCountValue > 1 Then
+                If MyMsgBox("你确定要关闭联机房间吗？" & vbCrLf & "所有玩家都需要重新输入房间码才可加入游戏！", "退出联机", "确定", "取消", IsWarn:=True) = 2 Then Return True
             ElseIf Closing Then
                 If MyMsgBox(If(IsServerSide, "你确定要关闭联机房间吗？", "你确定要离开联机房间吗？"), "退出联机", "确定", "取消") = 2 Then Return True
             End If
@@ -355,16 +312,15 @@ Public Class PageLinkMain
         Return False
     End Function
 
-    '复制邀请码
+    '复制房间码
     Private Sub Copy() Handles BtnFinishCopy.Click
-        Dim CodeText As String = $"在 PCL 启动器中输入邀请码【{GetInviteCode()}】，即可加入联机房间！"
+        Dim CodeText As String = $"在 PCL 启动器中输入房间码【{GetInviteCode()}】，即可加入联机房间！"
         ClipboardSet(CodeText, False)
         Settings.Set("LinkLastAutoJoinInviteCode", CodeText)
-        Hint("已复制邀请码！", HintType.Green)
+        Hint("已复制房间码！", HintType.Green)
     End Sub
     Private Function GetInviteCode() As String
-        Return $"{NetworkName}-{NetworkSecret}-{INVITE_CODE_VERSION.ToString.PadLeft(2, "0"c)}{ _
-            If(DiscoverNodeID = -1, 0, DiscoverNodeID).ConvertRadix(16).PadLeft(3, "0"c)}"
+        Return RoomCode
     End Function
 
     '复制 IP
@@ -376,321 +332,270 @@ Public Class PageLinkMain
 #End Region
 
     '===============================
-    '  后端
+    '  后端（陶瓦联机 Terracotta）
     '===============================
 
     ''' <summary>
-    ''' EasyTier 所在的文件夹路径，以 \ 结尾。
+    ''' 陶瓦联机（Terracotta）当前版本，与 HMCL 内置版本对齐。
     ''' </summary>
-    Private PathEasyTier As String = Paths.AppDataThenName & "EasyTier\"
+    Private Const TerracottaVersion As String = "0.4.2"
+    ''' <summary>
+    ''' Terracotta 所在的文件夹路径，以 \ 结尾。
+    ''' </summary>
+    Private PathTerracotta As String = Paths.AppDataThenName & "Terracotta\"
     ''' <summary>
     ''' 当前是服务端还是客户端。
     ''' </summary>
     Private IsServerSide As Boolean
     ''' <summary>
-    ''' 服务端映射前的端口号。
+    ''' 当前使用的 Terracotta 分类（windows-x86_64 / windows-arm64）。
     ''' </summary>
-    Private ServerPort As Integer
+    Private TerracottaClassifier As String = "windows-x86_64"
     ''' <summary>
-    ''' 客户端映射后的端口号。
+    ''' Terracotta 可执行文件名。
     ''' </summary>
-    Private ClientPort As Integer
+    Private TerracottaExeName As String = ""
     ''' <summary>
-    ''' RPC 端口号。
+    ''' 房间码（房主创建成功后由陶瓦联机服务生成）。
     ''' </summary>
-    Private RPCPort As Integer
+    Private RoomCode As String = ""
     ''' <summary>
-    ''' 在客户端映射后的地址。
-    ''' 除非已作为客户端启动 EasyTier，否则一直为 Nothing。
+    ''' 客户端映射后的服务器地址（加入成功后由陶瓦联机服务给出）。
     ''' </summary>
     Private ClientAddress As String = Nothing
     ''' <summary>
-    ''' 发现节点的 ID。
-    ''' 若必须设定自定义节点则为 -2；若等待选择则为 -1；选择回退节点则为 0；否则为对应节点的 ID。
+    ''' 陶瓦联机本地 HTTP 服务端口。
     ''' </summary>
-    Private DiscoverNodeID As Integer = -1
+    Private Shared TerracottaPort As Integer = 0
     ''' <summary>
-    ''' 网络信息。
+    ''' 陶瓦联机公共节点列表。
     ''' </summary>
-    Private NetworkName As String, NetworkSecret As String
+    Private Shared PublicNodes As New List(Of String)
 
 #Region "加载"
 
     Private WithEvents LinkLoader As New LoaderCombo(Of Integer)("联机", {
-        New LoaderTask(Of Integer, Integer)("获取配置", AddressOf InitConfig) With {.ProgressWeight = 8},
-        New LoaderTask(Of Integer, List(Of NetFile))("准备下载联机模块", AddressOf InitPrepareDownload) With {.ProgressWeight = 2},
-        New LoaderDownload("下载联机模块", New List(Of NetFile)) With {.ProgressWeight = 40},
-        New LoaderTask(Of Integer, Integer)("启动联机模块", AddressOf InitLaunch) With {.ProgressWeight = 50}
+        New LoaderTask(Of Integer, Integer)("获取陶瓦联机节点", AddressOf InitConfig) With {.ProgressWeight = 8},
+        New LoaderTask(Of Integer, List(Of NetFile))("准备下载陶瓦联机模块", AddressOf InitPrepareDownload) With {.ProgressWeight = 2},
+        New LoaderDownload("下载陶瓦联机模块", New List(Of NetFile)) With {.ProgressWeight = 40},
+        New LoaderTask(Of Integer, Integer)("启动陶瓦联机模块", AddressOf InitLaunch) With {.ProgressWeight = 50}
     })
 
-    '1. 获取服务器配置
+    '1. 获取陶瓦联机公共节点列表
     Private Sub InitConfig(Task As LoaderTask(Of Integer, Integer))
-        UpdateLoadingPage("正在联网获取配置……", "联网获取配置")
-        If VersionBranchMain <> "Official" Then
-            Throw New Exception($"$开源版无法联网获取配置。{vbCrLf}你可以在 PCL 官方版的缓存文件夹下查看 ServerConfig 的当前内容， 并在代码中进行相应修改。")
-        End If
-        ServerLoader.WaitForExit(LoaderToSyncProgress:=Task)
-        If ServerConfig Is Nothing Then Throw New Exception("无法从服务器获取配置")
-        '检查是否已禁用联机功能
-        Dim DisableReason = ServerConfig("Link")?("DisableReason2")?.ToString
-        If Not String.IsNullOrEmpty(DisableReason) Then Throw New Exception("$" & DisableReason) 'TODO: 可能不会显示错误原因？
-        If CType(ServerConfig("Link"), JObject).ContainsKey("MinVersionCode") AndAlso
-           VersionCode < ServerConfig("Link")("MinVersionCode").ToObject(Of Integer) Then
-            Throw New Exception("$你的 PCL 版本太老了，请在更新 PCL 之后再联机！")
-        End If
+        UpdateLoadingPage("正在获取陶瓦联机节点……", "获取陶瓦联机节点")
+        Try
+            Dim Raw As JArray = NetRequestByClient("https://terracotta.glavo.site/nodes", RequireJson:=True).DeserializeJson()
+            PublicNodes = Raw.Select(Function(Node) Node("url").ToString).Distinct().ToList()
+            Logger.Info($"获取到陶瓦联机节点 {PublicNodes.Count} 个")
+        Catch ex As Exception
+            Logger.Warn(ex, "获取陶瓦联机节点列表失败，将尝试直接连接")
+            PublicNodes = New List(Of String)
+        End Try
+        Task.Output = 0
     End Sub
 
     '2. 获取需要下载的文件
-    Private ServerVersion As Integer
     Private Sub InitPrepareDownload(Task As LoaderTask(Of Integer, List(Of NetFile)))
         '获取 CPU 架构
         UpdateLoadingPage("正在获取 CPU 架构……", "获取 CPU 架构")
         Dim Architecture As String = GetType(String).Assembly.GetName().ProcessorArchitecture
         Select Case Architecture
-            Case ProcessorArchitecture.X86
-                Architecture = "i686"
             Case ProcessorArchitecture.Amd64
                 Architecture = "x86_64"
             Case ProcessorArchitecture.Arm
                 Architecture = "arm64"
             Case Else
-                Logger.Warn($"CPU 是不支持的 {Architecture} 架构，这可能会导致联机模块无法启动！")
-                Architecture = "arm64"
+                Throw New Exception($"$陶瓦联机暂不支持 {Architecture} 架构，请使用 64 位 Windows 系统。")
         End Select
+        TerracottaClassifier = $"windows-{Architecture}"
         Logger.Info($"CPU 架构：{Architecture}")
         Telemetry("联机开始")
-        '检查 EasyTier 版本
-        UpdateLoadingPage("正在检查联机模块版本……", "检查联机模块版本")
-        If Not (FileUtils.Exists(PathEasyTier & "联机模块 CLI.exe") AndAlso FileUtils.Exists(PathEasyTier & "联机模块.exe") AndAlso
-                FileUtils.Exists(PathEasyTier & "Packet.dll")) Then
-            Settings.Set("LinkEasyTierVersion", -1)
+        '检查 Terracotta 版本
+        UpdateLoadingPage("正在检查陶瓦联机版本……", "检查陶瓦联机版本")
+        TerracottaExeName = $"terracotta-{TerracottaVersion}-{TerracottaClassifier}.exe"
+        If Not (FileUtils.Exists(PathTerracotta & TerracottaExeName) AndAlso FileUtils.Exists(PathTerracotta & "VCRUNTIME140.DLL")) Then
+            Settings.Set("LinkTerracottaVersion", -1)
         End If
-        Dim LocalVersion As Integer = Settings.Get(Of Integer)("LinkEasyTierVersion")
-        ServerVersion = ServerConfig("Link")("EasyTierVersion")
+        Dim LocalVersion As Integer = Settings.Get(Of Integer)("LinkTerracottaVersion")
         Dim RequiredFiles As New List(Of NetFile)
-        Logger.Info($"EasyTier 本地版本：{LocalVersion}，需求版本：{ServerVersion}")
-        If LocalVersion < ServerVersion Then
-            RequiredFiles.Add(New NetFile(
-                ServerConfig("Link")("Downloads").Select(Function(UrlEntry) UrlEntry.ToString.Replace("{arch}", Architecture)),
-                PathEasyTier & "EasyTier.zip",
-                New FileChecker With {.MinSize = 1024 * 1024 * 2}))
+        Logger.Info($"陶瓦联机本地版本：{LocalVersion}，需求版本：{TerracottaVersion}")
+        If LocalVersion < 0 Then
+            RequiredFiles.Add(New NetFile({
+                $"https://github.com/burningtnt/Terracotta/releases/download/v{TerracottaVersion}/terracotta-{TerracottaVersion}-{TerracottaClassifier}-pkg.tar.gz",
+                $"https://gitee.com/burningtnt/Terracotta/releases/download/v{TerracottaVersion}/terracotta-{TerracottaVersion}-{TerracottaClassifier}-pkg.tar.gz",
+                $"https://cnb.cool/HMCL-Terracotta/Terracotta/-/releases/download/v{TerracottaVersion}/terracotta-{TerracottaVersion}-{TerracottaClassifier}-pkg.tar.gz",
+                $"https://alist.8mi.tech/d/mirror/HMCL-Terracotta/Auto/v{TerracottaVersion}/terracotta-{TerracottaVersion}-{TerracottaClassifier}-pkg.tar.gz"
+            }, PathTerracotta & "Terracotta.tar.gz",
+               New FileChecker With {.MinSize = 1024 * 1024}))
         End If
         '开始下载
-        UpdateLoadingPage("正在下载联机模块……", "下载联机模块")
+        UpdateLoadingPage("正在下载陶瓦联机模块……", "下载陶瓦联机模块")
         Task.Output = RequiredFiles
     End Sub
 
-    '3. 启动联机模块
+    '3. 启动陶瓦联机模块
     Private Sub InitLaunch(Task As LoaderTask(Of Integer, Integer))
         '解压文件
-        UpdateLoadingPage("正在解压联机模块……", "解压联机模块")
-        If FileUtils.Exists(PathEasyTier & "EasyTier.zip") Then
-            '解压
-            Dim ExtractPath As String = RequestTaskTempFolder()
-            'FileUtils.ExtractToDirectory(PathEasyTier & "EasyTier.zip", ExtractPath,
-            '    progressHandler:=Sub(Percentage) Task.Progress = Percentage * 0.05)
-            DirectoryUtils.Copy(DirectoryUtils.EnumerateDirectories(ExtractPath, True).First, PathEasyTier)
-            '重命名
-            FileUtils.Move(PathEasyTier & "easytier-core.exe", PathEasyTier & "联机模块.exe")
-            FileUtils.Move(PathEasyTier & "easytier-cli.exe", PathEasyTier & "联机模块 CLI.exe")
-            '清理
-            FileUtils.Delete(PathEasyTier & "EasyTier.zip")
-            Settings.Set("LinkEasyTierVersion", ServerVersion)
-        End If
-        Task.Progress = 0.07
-        '获取节点列表
-        UpdateLoadingPage("正在获取节点列表……", "获取节点列表")
-        Dim RawPeers As List(Of String)
-        Dim CustomPeers As String = Settings.Get(Of String)("LinkCustomPeer")
-        If String.IsNullOrWhiteSpace(CustomPeers) Then
-            If DiscoverNodeID = -2 AndAlso Not IsServerSide Then
-                Panic("未填写自定义节点设置", $"$你必须在 {vbLQ}自定义节点{vbRQ} 设置中填写与房主相同的内容，{vbCrLf}才能进入该房间！")
-                Return
+        UpdateLoadingPage("正在解压陶瓦联机模块……", "解压陶瓦联机模块")
+        If FileUtils.Exists(PathTerracotta & "Terracotta.tar.gz") Then
+            ExtractTarGz(PathTerracotta & "Terracotta.tar.gz", PathTerracotta)
+            '若解压到了子目录，则将文件平铺到根目录
+            If Not FileUtils.Exists(PathTerracotta & TerracottaExeName) Then
+                Dim FoundExe = Directory.GetFiles(PathTerracotta, TerracottaExeName, SearchOption.AllDirectories).FirstOrDefault()
+                If FoundExe IsNot Nothing Then FileUtils.Move(FoundExe, PathTerracotta & TerracottaExeName)
             End If
-            RawPeers = GetTargetPeers()
-        Else
-            If DiscoverNodeID <> -2 AndAlso Not IsServerSide Then Hint("房主可能没有使用自定义节点设置，请确认你们的自定义节点设置是否一致！")
-            RawPeers = CustomPeers.Split("，,".ToCharArray).Select(Function(p) p.Trim).Where(Function(p) Not String.IsNullOrEmpty(p)).ToList()
-            Logger.Info($"使用自定义节点：{CustomPeers}")
+            If Not FileUtils.Exists(PathTerracotta & "VCRUNTIME140.DLL") Then
+                Dim FoundDll = Directory.GetFiles(PathTerracotta, "VCRUNTIME140.DLL", SearchOption.AllDirectories).FirstOrDefault()
+                If FoundDll IsNot Nothing Then FileUtils.Move(FoundDll, PathTerracotta & "VCRUNTIME140.DLL")
+            End If
+            FileUtils.Delete(PathTerracotta & "Terracotta.tar.gz")
+            Settings.Set("LinkTerracottaVersion", 1)
         End If
-        Task.Progress = 0.13
-        '获取空闲端口
-        UpdateLoadingPage("正在启动联机模块……", "启动联机模块")
-        Dim FreePorts = FindFreePorts(5, ServerPort)
-        ClientPort = FreePorts(0)
-        RPCPort = FreePorts(1)
-        Dim ListenersPort As Integer = FreePorts(2) '它会占用【当前、当前 +1、当前 +2】共三个端口
-        '获取启动参数
-        Dim Arguments As String = ServerConfig("Link")("Argument")
-        Arguments += $" --network-name={NetworkName} --network-secret={NetworkSecret} --listeners {ListenersPort} --rpc-portal {RPCPort} --private-mode true"
-        Dim HostName = If(IsServerSide, "Server-", "Client-") & Identify.GetStableHashCode().ConvertRadix(36).TrimStart("-"c).EnsureLength("0", 6)
-        If IsServerSide Then
-            Arguments += $" -i 10.114.114.114 --hostname={HostName} --tcp-whitelist={ServerPort} --udp-whitelist={ServerPort}"
-        Else
-            Arguments += $" -d --hostname={HostName} --tcp-whitelist=0 --udp-whitelist=0"
-            '端口转发
-            ClientAddress = $"localhost:{ClientPort}"
-            Arguments += $" --port-forward tcp://[{IPAddress.IPv6Loopback}]:{ClientPort}/10.114.114.114:{ServerPort}"
-            Arguments += $" --port-forward udp://[{IPAddress.IPv6Loopback}]:{ClientPort}/10.114.114.114:{ServerPort}"
-            Arguments += $" --port-forward tcp://{IPAddress.Loopback}:{ClientPort}/10.114.114.114:{ServerPort}"
-            Arguments += $" --port-forward udp://{IPAddress.Loopback}:{ClientPort}/10.114.114.114:{ServerPort}"
-        End If
-        For Each Peer As String In RawPeers
-            Arguments += $" -p=""{Peer}"""
-        Next
-        If Settings.Get(Of Integer)("LinkLatencyMode") = 1 Then Arguments += " --latency-first"
+        Task.Progress = 0.08
         '启动进程
-        ProcessStart(Arguments)
+        UpdateLoadingPage("正在启动陶瓦联机模块……", "启动陶瓦联机模块")
+        Dim HttpFileDir As String = Path.Combine(RequestTaskTempFolder(), "TerracottaHttp")
+        Directory.CreateDirectory(HttpFileDir)
+        Dim HttpFile As String = Path.Combine(HttpFileDir, "http")
+        ProcessStart(PathTerracotta & TerracottaExeName, $"--hmcl ""{HttpFile}""")
         Task.Progress = 0.15
-        '等待连接
-        Dim TimeoutCounter As Integer = 0
-        Do
-            Thread.Sleep(500) '为避免还没启动好先跑 CLI 了，先等半秒
-            '刷新信息
-            CheckCrash()
-            RefreshPeerLoader.WaitForExit(IsForceRestart:=True)
-            '查找目标节点
-            Dim Ping = GetPeerPing()
-            If Ping > 0 Then
-                Logger.Info($"已与目标建立连接，当前 Ping 为 {Ping:0.0}ms")
-                Telemetry("联机成功", "Server", IsServerSide, "NAT", NATType)
-                Exit Do '退出循环
-            End If
-            '更新进度
-            Dim LastProgress = Task.Progress
-            Dim PeerCount As Integer = If(Peers Is Nothing, -1, Peers.Where(Function(p) p.Ping > 0).Count)
-            Select Case PeerCount
-                Case -1 'CLI 无返回
-                    Task.Progress = (Task.Progress + 0.02).Clamp(0.15, 0.25)
-                Case 0 'CLI 有返回，但未连接到任何节点
-                    UpdateLoadingPage("正在连接到节点……", "连接节点")
-                    Task.Progress = (Task.Progress + 0.02).Clamp(If(IsServerSide, 0.5, 0.3), If(IsServerSide, 0.95, 0.5))
-                Case Else '已连接到节点，但未连接到房主
-                    UpdateLoadingPage("正在连接到房主……", "连接房主")
-                    Task.Progress = (Task.Progress + 0.02).Clamp(Math.Min(0.45 + PeerCount * 0.05, 0.65), 0.95)
-            End Select
-            '超时判定
-            If LastProgress <> Task.Progress Then
-                TimeoutCounter = 0
-            ElseIf TimeoutCounter < 30 * 2 Then
-                TimeoutCounter += 1
-            Else '进度停滞超过 30s
-                Select Case PeerCount
-                    Case -1 'CLI 无返回
-                        Panic("无法启动联机模块", "近期日志：" & vbCrLf & LogHistory.Join(vbCrLf))
-                    Case 0 'CLI 有返回，但未连接到任何节点
-                        Panic("无法连接到节点", $"请检查你的网络环境是否良好。")
-                    Case Else '已连接到节点，但未连接到房主
-                        Panic("无法连接到房主", $"可能的原因：{vbCrLf}- 你或者房主的网络环境不佳{vbCrLf}- 房主已关闭房间{vbCrLf}- 邀请码输错了")
-                End Select
-            End If
-        Loop Until Task.IsCanceled
-        If Task.IsCanceled Then Throw New OperationCanceledException
-        '等待连接稳定，最多 5s
-        If IsServerSide Then Return
-        UpdateLoadingPage("连接优化中……", "优化连接")
-        Task.Progress = 0.999
-        For i = 1 To 50
-            Dim Server = GetTargetPeer()
-            If Server IsNot Nothing AndAlso Not Server.Relay AndAlso Server.Ping < 100 Then Return '结束
-            If Task.IsCanceled Then Throw New OperationCanceledException
-            Thread.Sleep(100)
-        Next
-    End Sub
-    ''' <summary>
-    ''' 从在线配置和 API 获取需要连接的节点列表，并更新发现节点 ID。
-    ''' 根据发现节点 ID，会有以下行为变化：
-    '''   -1：作为房主，根据负载均衡选择一个发现节点。
-    '''   0：作为加入者，但邀请码未提供发现节点 ID，使用回退发现节点。
-    '''   >0：作为加入者，根据 ID 选择对应的发现节点；如果没有，使用回退发现节点。
-    ''' </summary>
-    Private Function GetTargetPeers() As List(Of String)
-        Dim FinalPeers As New List(Of String), FinalDiscoverID As Integer = -1
-        Dim FallbackDiscoverID = ServerConfig("Link")("DiscoverPeerId").ToObject(Of Integer)
-        Dim FallbackDiscoverAddress As String = ServerConfig("Link")("DiscoverPeer").ToString()
-        Try
-            '从 API 获取节点列表
-            Dim RawNodes As JObject
-            Dim IsFallbackRawList As Boolean = False
-            Try
-                RawNodes = NetRequestByClient("https://uptime.easytier.cn/api/nodes?page=1&per_page=1000", RequireJson:=True).DeserializeJson()
-            Catch exx As Exception
-                Logger.Warn(exx, "从源站获取节点列表失败，将使用 CDN 缓存")
-                RawNodes = NetRequestByClientRetry("https://easytier.meloong.com/?page=1&per_page=1000", RequireJson:=True).DeserializeJson()
-                IsFallbackRawList = True
-            End Try
-            '分析节点列表
-            Dim Nodes As New List(Of JObject) '负载会添加在 load 字段上
-            Dim BlackList As List(Of String) = ServerConfig("Link")("PeersBlackList").Select(Function(p) p.ToString).ToList()
-            For Each Node As JObject In RawNodes("data")("items")
-                '状态检查
-                Dim ID = Node("id").ToObject(Of Integer)
-                If Not Node("is_active").ToObject(Of Boolean) OrElse Not Node("is_approved").ToObject(Of Boolean) Then Continue For
-                If ID = DiscoverNodeID Then GoTo ForcedPass '若为指定的发现节点，忽略后续检查
-                If ID = FallbackDiscoverID Then Continue For '不主动选取回退发现节点
-                If BlackList.Contains(Node("address").ToString) Then Continue For 'ServerConfig 黑名单
-                If Node("usage_percentage").ToObject(Of Double) = 0 AndAlso RandomInteger(1, 100) <> 1 Then Continue For '或许节点有问题才导致是 0 负载，让它只有 1% 概率被选中
-                '标签检查
-                Dim Tags = Node("tags").Select(Function(t) t.ToString).ToList
-                If Not Tags.Contains("国内") OrElse Not Tags.Contains("MC中继") Then Continue For
-                '计算负载并加入列表
-ForcedPass:
-                Dim Load As Double = Node("usage_percentage").ToObject(Of Double) '负载
-                Load *= 110 - Node("health_percentage_24h").ToObject(Of Double) '可用率
-                Node("load") = Load
-                Nodes.Add(Node)
-            Next
-            '排序
-            If Not IsFallbackRawList Then
-                Nodes = Nodes.OrderBy(Function(n) n("load").ToObject(Of Double)).ToList() '按负载从低到高排序
-            Else
-                Nodes = Nodes.Shuffle().ToList() '回退到 CDN 缓存时，由于负载数据可能过期，直接随机选择
-            End If
-            '选取发现节点
-            Dim SelectedDiscoverNode As JObject = Nothing
-            If DiscoverNodeID = -1 Then '-1：作为房主，根据负载均衡选择一个发现节点
-                SelectedDiscoverNode = Nodes.FirstOrDefault(Function(n) Not n("allow_relay").ToObject(Of Boolean))
-            ElseIf DiscoverNodeID > 0 Then '>0：作为加入者，根据 ID 选择对应的发现节点；如果没有，使用回退发现节点
-                SelectedDiscoverNode = Nodes.FirstOrDefault(Function(n) n("id").ToObject(Of Integer) = DiscoverNodeID)
-                If SelectedDiscoverNode Is Nothing Then
-                    Logger.Warn($"未找到 ID {DiscoverNodeID} 的发现节点")
-                    Panic("房间已过期", "请让房主重新创建房间！")
+        '等待 HTTP 服务端口文件出现
+        UpdateLoadingPage("正在连接陶瓦联机服务……", "连接陶瓦联机服务")
+        Dim FileTimeout As Long = Environment.TickCount + 20000
+        Dim ProcessExitedTime As Long = Long.MaxValue
+        Do While Environment.TickCount < FileTimeout
+            If File.Exists(HttpFile) Then Exit Do
+            If ProcessCore IsNot Nothing AndAlso ProcessCore.HasExited Then
+                '陶瓦联机支持单实例委托：新实例写端口文件后立即退出，由常驻实例提供服务，
+                '因此进程退出本身不算崩溃；只有端口文件迟迟未出现时才按启动失败处理。
+                If ProcessExitedTime = Long.MaxValue Then ProcessExitedTime = Environment.TickCount
+                If Environment.TickCount - ProcessExitedTime >= 10000 Then
+                    Panic("无法启动陶瓦联机模块", "近期日志：" & vbCrLf & LogHistory.Join(vbCrLf))
                     Throw New OperationCanceledException
                 End If
             End If
-            If SelectedDiscoverNode Is Nothing Then '使用回退发现节点
-                SelectedDiscoverNode = New JObject From {{"address", FallbackDiscoverAddress}, {"id", FallbackDiscoverID}}
-                Logger.Warn("将使用回退发现节点")
-            End If
-            FinalPeers.Add(SelectedDiscoverNode("address").ToString())
-            FinalDiscoverID = SelectedDiscoverNode("id").ToObject(Of Integer)
-            Logger.Info($"发现节点：{SelectedDiscoverNode("address")} (ID: {FinalDiscoverID})")
-            '选取中继节点
-            If ModeDebug OrElse Not IsServerSide Then '房主只连接发现节点，不连接中继节点
-                Dim RelayCount As Integer = ServerConfig("Link")("RandomPeer").ToObject(Of Integer)
-                Dim RelayNodes = Nodes.Where(Function(n) n("allow_relay").ToObject(Of Boolean)).ToList()
-                If RelayNodes.Count < RelayCount Then Throw New Exception($"可用的中继节点数量不足，需要 {RelayCount} 个，实际 {RelayNodes.Count} 个")
-                FinalPeers.AddRange(RelayNodes.Take(RelayCount).Select(Function(n) n("address").ToString()))
-            End If
-        Catch ex As Exception
-            ex.ThrowIfCanceled()
-            Logger.Error(ex, "获取节点列表失败，联机质量可能受到影响", LogBehavior.Toast)
-            FinalPeers.AddRange(ServerConfig("Link")("Peers").Select(Function(p) p.ToString))
-            If FinalDiscoverID <= 0 Then
-                FinalPeers.Add(FallbackDiscoverAddress)
-                FinalDiscoverID = FallbackDiscoverID
-            End If
-        End Try
-        '版本 1 兼容
-        If CType(ServerConfig("Link"), JObject).ContainsKey("EnableForcedPeer") Then
-            FinalPeers.Add("tcp://mc1.easytier.cn:55558")
-            If FinalDiscoverID <= 0 Then FinalDiscoverID = 94
+            Thread.Sleep(300)
+        Loop
+        If Not File.Exists(HttpFile) Then Throw New Exception("$无法启动陶瓦联机模块。")
+        TerracottaPort = CType(File.ReadAllText(HttpFile).DeserializeJson()("port"), Integer)
+        Logger.Info($"陶瓦联机本地 HTTP 端口：{TerracottaPort}")
+        Task.Progress = 0.25
+        '发起创建/加入请求
+        If IsServerSide Then
+            UpdateLoadingPage("正在创建房间……", "创建房间")
+        Else
+            UpdateLoadingPage("正在加入房间……", "加入房间")
         End If
-        '强制添加的节点
-        FinalPeers.AddRange(ServerConfig("Link")("MandatoryPeers").Select(Function(p) p.ToString))
-        '结束
-        DiscoverNodeID = FinalDiscoverID
-        Return FinalPeers.Distinct.ToList
+        Dim Query As String = "player=" & WebUtility.UrlEncode(GetPlayerName())
+        For Each Node In PublicNodes
+            Query &= "&public_nodes=" & WebUtility.UrlEncode(Node)
+        Next
+        If IsServerSide Then
+            NetRequestByClient($"http://127.0.0.1:{TerracottaPort}/state/scanning?{Query}")
+        Else
+            NetRequestByClient($"http://127.0.0.1:{TerracottaPort}/state/guesting?room={WebUtility.UrlEncode(RoomCode)}&{Query}")
+        End If
+        '轮询状态直到成功或超时
+        Dim StateTimeout As Long = Environment.TickCount + 120000
+        Do
+            Thread.Sleep(500)
+            CheckCrash()
+            Dim Json As JObject
+            Try
+                Json = NetRequestByClient($"http://127.0.0.1:{TerracottaPort}/state", RequireJson:=True).DeserializeJson()
+            Catch ex As Exception
+                ex.ThrowIfCanceled()
+                Logger.Warn(ex, "获取陶瓦联机状态失败")
+                Continue Do
+            End Try
+            Select Case Json("state").ToString
+                Case "host-ok"
+                    RoomCode = Json("code").ToString
+                    Task.Progress = 1
+                    Logger.Info($"已创建房间，房间码：{RoomCode}")
+                    Return
+                Case "guest-ok"
+                    ClientAddress = Json("url").ToString
+                    Task.Progress = 1
+                    Logger.Info($"已加入房间，服务器地址：{ClientAddress}")
+                    Return
+                Case "exception"
+                    Dim TypeIndex As Integer = Json("type").ToObject(Of Integer)
+                    Panic("陶瓦联机出错", TerracottaExceptionTypes(Math.Min(Math.Max(TypeIndex, 0), TerracottaExceptionTypes.Length - 1)))
+                    Throw New OperationCanceledException
+                Case Else
+                    Task.Progress = (Task.Progress + 0.02).Clamp(0.25, 0.95)
+            End Select
+        Loop Until Task.IsCanceled OrElse Environment.TickCount > StateTimeout
+        If Task.IsCanceled Then Throw New OperationCanceledException
+        Panic("连接超时", "无法完成陶瓦联机连接，请检查你的网络环境后重试。")
+        Throw New OperationCanceledException
+    End Sub
+
+    Private Shared ReadOnly TerracottaExceptionTypes As String() = {
+        "无法连接到房主",
+        "与房主的连接被拒绝",
+        "联机模块崩溃",
+        "联机模块崩溃",
+        "服务器连接被重置",
+        "陶瓦联机服务响应无效"
+    }
+
+    ''' <summary>
+    ''' 解压 tar.gz 文件到目标目录（自动忽略目录条目与路径穿越）。
+    ''' </summary>
+    Private Sub ExtractTarGz(TarGzPath As String, TargetDir As String)
+        Dim FullTarget As String = Path.GetFullPath(TargetDir)
+        Using Gz As New GZipStream(File.OpenRead(TarGzPath), CompressionMode.Decompress)
+            Dim Header(511) As Byte
+            Do
+                Dim HeaderRead As Integer = Gz.Read(Header, 0, 512)
+                If HeaderRead < 512 Then Exit Do
+                If Header.All(Function(B) B = 0) Then Exit Do '结尾的零块
+                '文件名（0-99）与大小（124-135，八进制）
+                Dim Name As String = Encoding.ASCII.GetString(Header, 0, 100).TrimEnd(Chr(0), " "c).TrimStart("./")
+                Dim SizeOctal As String = Encoding.ASCII.GetString(Header, 124, 12).TrimEnd(Chr(0), " "c, vbNullChar)
+                If SizeOctal = "" Then Continue Do
+                Dim Size As Long = Convert.ToInt64(SizeOctal, 8)
+                If Name = "" OrElse Name = "." Then
+                    '目录条目：跳过数据
+                    SkipTarData(Gz, Size)
+                    Continue Do
+                End If
+                Dim FullPath As String = Path.GetFullPath(Path.Combine(TargetDir, Name))
+                If FullPath.StartsWith(FullTarget, StringComparison.OrdinalIgnoreCase) Then
+                    Directory.CreateDirectory(Path.GetDirectoryName(FullPath))
+                    Using Out As FileStream = File.Create(FullPath)
+                        Dim Buffer(65535) As Byte
+                        Dim Remaining As Long = Size
+                        Do While Remaining > 0
+                            Dim ReadCount As Integer = Gz.Read(Buffer, 0, CInt(Math.Min(Remaining, Buffer.Length)))
+                            If ReadCount = 0 Then Exit Do
+                            Out.Write(Buffer, 0, ReadCount)
+                            Remaining -= ReadCount
+                        Loop
+                    End Using
+                End If
+                '跳过对齐填充
+                SkipTarData(Gz, (512 - (Size Mod 512)) Mod 512)
+            Loop
+        End Using
+    End Sub
+    Private Sub SkipTarData(Gz As GZipStream, Length As Long)
+        Dim Buffer(1023) As Byte
+        Dim Remaining As Long = Length
+        Do While Remaining > 0
+            Dim ReadCount As Integer = Gz.Read(Buffer, 0, CInt(Math.Min(Remaining, Buffer.Length)))
+            If ReadCount = 0 Then Exit Do
+            Remaining -= ReadCount
+        Loop
+    End Sub
+
+    Private Function GetPlayerName() As String
+        Dim Name As String = Environment.UserName
+        If String.IsNullOrWhiteSpace(Name) Then Name = "Player"
+        Return Name
     End Function
 
 #End Region
@@ -698,7 +603,7 @@ ForcedPass:
 #Region "进程与日志"
 
     ''' <summary>
-    ''' EasyTier Core 进程。
+    ''' Terracotta 进程。
     ''' </summary>
     Private Shared ProcessCore As Process
     Private Shared ProcessOutputHandle As AutoResetEvent, ProcessErrorHandle As AutoResetEvent
@@ -712,9 +617,9 @@ ForcedPass:
             '关闭未捕获的进程
             For Each ProcessObject In Process.GetProcesses
                 If ProcessObject.Id = ProcessCore?.Id Then Continue For
-                If ProcessObject.ProcessName <> "联机模块" AndAlso ProcessObject.ProcessName <> "联机模块 CLI" Then Continue For
+                If Not ProcessObject.ProcessName.StartsWith("terracotta", StringComparison.OrdinalIgnoreCase) Then Continue For
                 Try
-                    Logger.Info($"停止残留的联机模块，PID：{ProcessObject.Id}，进程名：{ProcessObject.ProcessName}")
+                    Logger.Info($"停止残留的陶瓦联机模块，PID：{ProcessObject.Id}，进程名：{ProcessObject.ProcessName}")
                     ProcessObject.Kill()
                     ProcessObject.Close()
                 Catch exx As Exception
@@ -723,7 +628,7 @@ ForcedPass:
             Next
             '关闭由自身启动的进程
             If ProcessCore IsNot Nothing AndAlso Not ProcessCore.HasExited Then
-                Logger.Info($"停止所启动的联机模块，PID：{ProcessCore.Id}")
+                Logger.Info($"停止所启动的陶瓦联机模块，PID：{ProcessCore.Id}")
                 ProcessCore.Kill()
                 ProcessCore.Close()
                 ProcessCore = Nothing
@@ -732,17 +637,13 @@ ForcedPass:
             ProcessOutputHandle?.Dispose()
             ProcessErrorHandle?.Dispose()
         Catch ex As Exception
-            Logger.Warn(ex, "停止联机模块失败")
+            Logger.Warn(ex, "停止陶瓦联机模块失败")
         End Try
     End Sub
     ''' <summary>
     ''' 出现意外错误，给出错误信息并结束联机。
     ''' </summary>
     Private Sub Panic(Brief As String, Detail As String)
-        '常见原因分析
-        If Detail.Contains("failed to listen on ") Then
-            Detail = $"监听端口失败。{vbCrLf}请点击重试，如果还是出现此错误，可以重启电脑解决。{vbCrLf}{vbCrLf}{Detail}"
-        End If
         '显示信息
         If LinkState = LinkStates.Loading Then
             FailReason = Brief
@@ -757,18 +658,19 @@ ForcedPass:
     ''' <summary>
     ''' 启动进程。
     ''' </summary>
-    Private Sub ProcessStart(Arguments As String)
+    Private Sub ProcessStart(ExePath As String, Arguments As String)
         Dim Info = New ProcessStartInfo With {
-            .FileName = PathEasyTier & "联机模块.exe",
+            .FileName = ExePath,
             .Arguments = Arguments,
             .UseShellExecute = False,
             .CreateNoWindow = True,
+            .RedirectStandardInput = True,
             .RedirectStandardError = True,
             .RedirectStandardOutput = True,
             .StandardOutputEncoding = Encoding.UTF8,
             .StandardErrorEncoding = Encoding.UTF8
         }
-        Logger.Info($"正在启动 EasyTier：{Arguments}")
+        Logger.Info($"正在启动陶瓦联机：{Arguments}")
         ProcessCore = New Process With {.StartInfo = Info}
         Dim LogLineHandler =
         Sub(sender As Object, e As DataReceivedEventArgs, Handle As AutoResetEvent)
@@ -780,7 +682,7 @@ ForcedPass:
                 ProcessLogLine(e.Data)
             Catch unused As ObjectDisposedException
             Catch ex As Exception
-                Logger.Warn(ex, "读取 EasyTier 信息失败")
+                Logger.Warn(ex, "读取陶瓦联机信息失败")
             End Try
         End Sub
         ProcessOutputHandle = New AutoResetEvent(False)
@@ -796,194 +698,17 @@ ForcedPass:
         Logger.Info(Line)
         LogHistory.Enqueue(Line)
         If LogHistory.Count >= 10 Then LogHistory.Dequeue()
-        '检查日志内容
-        If Line.ContainsIgnoreCase("new peer connection added") Then
-            Logger.Warn($"已建立连接：{If(Line.RegexSeek("(?<=remote_addr.+?"")[^""}]{3,}"), Line)}")
-            Update()
-        ElseIf Line.ContainsIgnoreCase("peer connection removed") Then
-            Logger.Warn($"已断开连接：{If(Line.RegexSeek("(?<=remote_addr.+?"")[^""}]{3,}"), Line)}")
-            Update()
-        End If
     End Sub
     Private LogHistory As New Queue(Of String)(10)
 
 #End Region
 
-#Region "CLI 节点信息获取"
-
-    Private Class Peer
-        ''' <summary>
-        ''' 该节点的类型。
-        ''' </summary>
-        Public ReadOnly Type As Types
-        Public Enum Types
-            ''' <summary>
-            ''' 客户端。
-            ''' </summary>
-            Client
-            ''' <summary>
-            ''' 服务器。
-            ''' </summary>
-            Server
-            ''' <summary>
-            ''' 公共节点。
-            ''' </summary>
-            Misc
-            ''' <summary>
-            ''' 自己，或者自己的重复（它可能返回多个自己）。
-            ''' </summary>
-            Self
-        End Enum
-        ''' <summary>
-        ''' 与该节点的延迟 (ms)。
-        ''' 若是自己则为 0。
-        ''' </summary>
-        Public ReadOnly Ping As Double
-        ''' <summary>
-        ''' 名称。
-        ''' </summary>
-        Public ReadOnly Name As String
-        ''' <summary>
-        ''' 是否通过中继连接。
-        ''' </summary>
-        Public ReadOnly Relay As Boolean
-        ''' <summary>
-        ''' NAT 类型。
-        ''' </summary>
-        Public ReadOnly NATType As NATTypes
-
-        ''' <summary>
-        ''' 从 CLI 给出的信息分析对应的数据。
-        ''' </summary>
-        Public Sub New(Info As JObject)
-            '类别
-            Dim PeerName = Info("hostname").ToString
-            If Info("cost").ToString = "Local" Then
-                Type = Types.Self
-            ElseIf PeerName.StartsWithF("Client") Then
-                Type = Types.Client
-            ElseIf Info("ipv4") = "10.114.114.114" Then '只允许这个 IP 作为房主，避免网络被多个房主搞炸的情况
-                Type = Types.Server
-            Else
-                Type = Types.Misc
-            End If
-            '基础信息
-            Double.TryParse(Info("lat_ms"), NumberStyles.Any, CultureInfo.InvariantCulture, Ping)
-            Name = PeerName
-            Relay = Info("cost").ToString.ContainsIgnoreCase("relay")
-            NATType = EnumUtils.FromString(Of NATTypes)(Info("nat_type"))
-        End Sub
-        Public Overrides Function ToString() As String
-            Return $"{Type} - {Name} - Ping {Ping:0.0}ms [中继? {Relay}] - NAT {NATType}"
-        End Function
-    End Class
-    Private Enum NATTypes
-        'https://github.com/EasyTier/EasyTier/blob/6bb2fd9a15ab2499bdeabdcc3a925e9bd9aebf50/easytier/src/proto/common.proto#L129
-        Unknown = 0
-        OpenInternet = 1
-        NoPAT = 2
-        FullCone = 3
-        Restricted = 4
-        PortRestricted = 5
-        Symmetric = 6
-        SymUdpFirewall = 7
-        SymmetricEasyInc = 8
-        SymmetricEasyDec = 9
-        ''' <summary>
-        ''' 尚未获取。
-        ''' </summary>
-        Pending = 10
-    End Enum
+#Region "状态刷新"
 
     ''' <summary>
-    ''' 当前的节点列表，使用 RefreshPeerLoader 来刷新。
-    ''' 若尚未成功获取过则为 Nothing，但保证在加载完成后至少是一个列表。
+    ''' 当前房间中的人数，包括自己。
     ''' </summary>
-    Private Peers As List(Of Peer) = Nothing
-    ''' <summary>
-    ''' 自己的 NAT 类型。
-    ''' </summary>
-    Private NATType As NATTypes = NATTypes.Pending
-
-    ''' <summary>
-    ''' 调用 EasyTier CLI 获取已连接节点信息。
-    ''' 这会过滤掉尚未完成连接的其他节点以及自己。
-    ''' 若在加载完成后连续获取失败 3 次，则会强制断开连接。
-    ''' </summary>
-    Private RefreshPeerLoader As New LoaderTask(Of Integer, List(Of Peer))("EasyTier CLI", AddressOf RefreshPeer)
-    Private Sub RefreshPeer()
-        Try
-            Dim CliResult = "" 'StartProcessAndGetOutput(PathEasyTier & "联机模块 CLI.exe", $"-o json -p 127.0.0.1:{RPCPort} peer", 2000, Encoding:=Encoding.UTF8, PrintLog:=False)
-            '解析
-            If Not CliResult.Contains("lat_ms") Then Throw New Exception("CLI 调用失败：" & vbCrLf & CliResult)
-            If GetUuid() Mod If(ModeDebug, 23, 103) = 0 Then Logger.Info($"CLI 输出抽样：{vbCrLf}{CliResult}")
-            Dim NewPeers As New List(Of Peer)
-            For Each Line As JObject In CType(CliResult.DeserializeJson(), JArray)
-                Try
-                    Dim Peer = New Peer(Line)
-                    If Peer.Type = Peer.Types.Self Then
-                        NATType = Peer.NATType '记录自己的 NAT
-                    Else
-                        NewPeers.Add(Peer)
-                    End If
-                Catch exx As Exception
-                    Logger.Warn(exx, $"错误的信息（{Line}）")
-                End Try
-            Next
-            '完成
-            Peers = NewPeers
-            FailCount = 0
-        Catch ex As Exception
-            Logger.Warn(ex, "获取节点信息失败")
-            If LinkState = LinkStates.Finished Then
-                FailCount += 1
-                If FailCount >= 4 Then Panic("获取节点信息失败", ex.Message)
-            End If
-        End Try
-    End Sub
-    ''' <summary>
-    ''' CLI 调用连续失败的次数。
-    ''' </summary>
-    Private FailCount As Integer = 0
-
-    ''' <summary>
-    ''' 根据当前的节点列表获取 Ping 值。
-    ''' 服务端会返回所有节点中最低的 Ping，客户端会返回服务端的 Ping。
-    ''' 0 代表尚不可用。
-    ''' </summary>
-    Private Function GetPeerPing() As Double
-        Dim Peer = GetTargetPeer()
-        If Peer Is Nothing Then Return 0
-        Return Peer.Ping
-    End Function
-    ''' <summary>
-    ''' 服务端会返回所有节点中 Ping 大于 0 最低的那一个，客户端会返回服务端。
-    ''' 若没有则为 Nothing。
-    ''' </summary>
-    Private Function GetTargetPeer() As Peer
-        If Peers Is Nothing Then Return Nothing
-        Dim Targets As IEnumerable(Of Peer)
-        If IsServerSide Then
-            Targets = Peers.Where(Function(p) p.Ping > 0)
-        Else
-            Targets = Peers.Where(Function(p) p.Type = Peer.Types.Server AndAlso p.Ping > 0)
-        End If
-        If Not Targets.Any Then Return Nothing
-        '返回 Ping 且最低的那个
-        Dim MinPing = Targets.Min(Function(p) p.Ping)
-        Return Targets.First(Function(p) p.Ping = MinPing)
-    End Function
-
-    ''' <summary>
-    ''' 获取当前房间中的人数，包括自己。
-    ''' 0 代表不可用。
-    ''' </summary>
-    Private ReadOnly Property PeopleCount As Integer
-        Get
-            If Peers Is Nothing Then Return 0
-            Return Peers.Where(Function(p) p.Type <> Peer.Types.Misc).Count() + 1 '加上自己
-        End Get
-    End Property
+    Private PeopleCountValue As Integer = 0
 
 #End Region
 
@@ -1018,97 +743,48 @@ ForcedPass:
     '每秒或进入页面时触发
     Private Sub Update() Handles Me.Loaded
         If LinkState <> LinkStates.Finished Then Return
-        '重新获取信息
-        SyncLock RefreshPeerLoader.LockState
-            If RefreshPeerLoader.State <> LoadState.Loading Then RefreshPeerLoader.Start(IsForceRestart:=True)
-        End SyncLock
+        '从陶瓦联机服务获取最新状态
+        If TerracottaPort > 0 Then
+            Try
+                Dim Json As JObject = NetRequestByClient($"http://127.0.0.1:{TerracottaPort}/state", RequireJson:=True).DeserializeJson()
+                Dim StateName As String = Json("state").ToString
+                Dim Profiles As JArray = Json("profiles")
+                If Profiles IsNot Nothing Then PeopleCountValue = Profiles.Count
+                '房主离开检测（客户端）
+                If Not IsServerSide AndAlso (StateName = "waiting" OrElse StateName = "exception") Then
+                    MyMsgBox("房主已离开房间！", "联机结束")
+                    ChangeState(LinkStates.Waiting)
+                    Return
+                End If
+            Catch ex As Exception
+                Logger.Warn(ex, "获取陶瓦联机状态失败")
+            End Try
+        End If
+        '检查核心状态
+        CheckCrash()
         '更新 UI
         If FrmMain.PageCurrent = FormMain.PageType.Link Then
             RunInUi(
             Sub()
                 'Logo 旋转动画
                 AniStart(AaRotateTransform(ImgFinishLogo, 500, 5000), "Link Logo Rotation")
-                'Ping
-                Dim Ping As Double = GetPeerPing()
-                Dim Connecting As Boolean = Ping Mod 500 = 0 OrElse $"{Ping:0.0}" = "1.0" OrElse FailCount > 0
-                If Connecting Then
-                    LabFinishPing.Text = "连接优化中"
-                Else
-                    LabFinishPing.Text = If(Ping >= 10, $"{Ping:0} ms", $"{Ping:0.0} ms")
-                End If
+                '状态显示
+                LabFinishPing.Text = "联机正常"
                 '人数显示
-                LabFinishPlayer.Text = PeopleCount & "  人"
-                '------------------------
-                '  提示条
-                '------------------------
+                LabFinishPlayer.Text = PeopleCountValue & " 人"
+                '提示条
                 HintFinish.Visibility = Visibility.Collapsed
-                If IsServerSide Then Return '服务端没有需要显示的提示
-                If Connecting Then Return '连接稳定过程中不显示提示
-                '中继提示
-                Dim Server As Peer = GetTargetPeer()
-                If Server Is Nothing Then Return
-                If Server.Relay Then
-                    If NATType >= NATTypes.Symmetric AndAlso Server.NATType >= NATTypes.Symmetric Then
-                        HintFinish.Text = "你和房主的网络环境都不太好，"
-                    ElseIf NATType >= NATTypes.Symmetric Then
-                        HintFinish.Text = "你的网络环境不太好，"
-                    ElseIf Server.NATType >= NATTypes.Symmetric Then
-                        HintFinish.Text = "房主的网络环境不太好，"
-                    Else
-                        HintFinish.Text = "你或者房主的网络环境不太好，"
-                    End If
-                    If String.IsNullOrWhiteSpace(Settings.Get(Of String)("LinkCustomPeer")) Then
-                        HintFinish.Text &= "正使用社区节点进行中继。"
-                    Else
-                        HintFinish.Text &= "正通过自定义节点进行中继。"
-                    End If
-                    HintFinish.Visibility = Visibility.Visible
-                    HintFinish.Theme = MyHint.Themes.Yellow
-                    Return
-                End If
-                '环境比房主更好的提示
-                If NATType >= NATTypes.PortRestricted Then Return '自身的 NAT 为 2 或更好
-                If Server.NATType < NATTypes.PortRestricted Then Return '房主的 NAT 为 3 或更差
-                Dim OtherPlayers = Peers.Where(Function(p) p.Type = Peer.Types.Client).ToList()
-                If Not OtherPlayers.Any() Then Return '房间里还有其他玩家
-                If OtherPlayers.Any(Function(p) p.Relay) Then Return '自己可以与所有玩家打洞
-                If OtherPlayers.All(Function(p) p.NATType < NATTypes.PortRestricted) Then Return '任意其他玩家的 NAT 为 3 或更差
-                HintFinish.Visibility = Visibility.Visible
-                HintFinish.Theme = MyHint.Themes.Blue
-                HintFinish.Text = "你的网络环境比房主更好！如果你来当房主，其他玩家或许能更加流畅！"
             End Sub)
-        End If
-        '检查核心状态
-        CheckCrash()
-        '检查节点状态
-        If Not Peers.Any Then
-            Panic("网络连接已断开", "请检查你的网络环境是否正常。")
-            Return
-        End If
-        If Not IsServerSide AndAlso Not Peers.Any(Function(p) p.Type = Peer.Types.Server) Then
-            MyMsgBox("房主已离开房间！", "联机结束")
-            ChangeState(LinkStates.Waiting)
-            Return
-        End If
-        '广播联机房间端口
-        If Not IsServerSide Then
-            Try
-                Static BroadcastSocket As New Socket(SocketType.Dgram, ProtocolType.Udp)
-                BroadcastSocket.SendTo(
-                    Encoding.UTF8.GetBytes($"[MOTD]PCL 联机房间[/MOTD][AD]{ClientPort}[/AD]"),
-                    SocketFlags.None,
-                    New IPEndPoint(IPAddress.Loopback, 4445))
-            Catch ex As Exception
-                Logger.Warn(ex, "广播联机房间端口失败")
-            End Try
         End If
     End Sub
     ''' <summary>
     ''' 检查联机模块是否崩溃。
     ''' </summary>
     Private Sub CheckCrash()
+        '端口文件已出现即视为联机模块可用（陶瓦联机支持单实例委托：本实例的进程可能已退出，由常驻实例继续服务）
+        If TerracottaPort > 0 Then Return
         If ProcessCore IsNot Nothing AndAlso Not ProcessCore.HasExited Then Return
-        Panic("联机模块已崩溃", "近期日志：" & vbCrLf & LogHistory.Join(vbCrLf))
+        Panic("陶瓦联机模块已崩溃", "近期日志：" & vbCrLf & LogHistory.Join(vbCrLf))
     End Sub
 
 #End Region

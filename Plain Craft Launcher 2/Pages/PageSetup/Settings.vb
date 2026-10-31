@@ -112,7 +112,7 @@ Public Class Settings
         New Setting("LinkLastAutoJoinInviteCode", "", Source:=Sources.Registry),
         New Setting("LinkLatencyMode", 0, Source:=Sources.Registry),
         New Setting("LinkCustomPeer", ""),
-        New Setting("LinkEasyTierVersion", -1, Source:=Sources.Registry),
+        New Setting("LinkTerracottaVersion", -1, Source:=Sources.Registry),
         New Setting("ToolHelpChinese", True, Source:=Sources.Registry),
         New Setting("ToolDownloadThread", 63, Source:=Sources.Registry),
         New Setting("ToolDownloadSpeed", 42, Source:=Sources.Registry, OnChanged:=AddressOf ModNet.UpdateNetTaskSpeedLimitHigh),
@@ -316,8 +316,6 @@ Public Class Settings
         If Value IsNot Nothing Then Return Value
         '对部分设置强制赋值
         Static ForcedSettings As New Dictionary(Of String, Object) From {
-            {"UiHiddenPageLink", True},
-            {"UiHiddenSetupLink", True}
         }
         Dim ForcedSetting As Object = Nothing
         If ForcedSettings.TryGetValue(Key, ForcedSetting) Then

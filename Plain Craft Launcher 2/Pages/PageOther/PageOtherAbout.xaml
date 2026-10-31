@@ -68,8 +68,8 @@
                     <local:MyButton Text="打开百科" Grid.Row="1" Grid.Column="2" Height="35" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.mcmod.cn" />
                     <local:MyListItem Title="z0z0r4" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="提供了 MCIM 社区资源镜像源和帮助库图床！" Grid.Row="2" Grid.Column="1" />
                     <local:MyButton Text="MCIM 主页" Grid.Row="2" Grid.Column="2" Height="35" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/mcmod-info-mirror" />
-                    <local:MyListItem Title="EasyTier" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="提供了联机模块！" Grid.Row="3" Grid.Column="1" />
-                    <local:MyButton Text="GitHub 页面" Grid.Row="3" Grid.Column="2" Height="35" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/EasyTier/EasyTier" />
+                    <local:MyListItem Title="陶瓦联机" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="提供了联机模块！（Terracotta，基于 EasyTier 开源项目）" Grid.Row="3" Grid.Column="1" />
+                    <local:MyButton Text="GitHub 页面" Grid.Row="3" Grid.Column="2" Height="35" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/burningtnt/Terracotta" />
                     <local:MyListItem Title="重庆大学开源软件镜像站" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="提供了 PCL 启动器及 Minecraft 部分开源项目的镜像分发！" Grid.Row="4" Grid.Column="1" />
                     <local:MyButton Text="打开镜像站" Grid.Row="4" Grid.Column="2" Height="35" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://mirrors.cqu.edu.cn/" />
                     <local:MyListItem Title="00ll00" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="提供了 Java Launch Wrapper 和一些重要服务支持！" Grid.Row="5" Grid.Column="1" />
