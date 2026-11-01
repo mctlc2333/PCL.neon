@@ -261,7 +261,7 @@ Public Class PageLinkMain
         'UI 更新
         If IsServerSide Then
             LabFinishTitle.Text = "已创建房间"
-            LabFinishDesc.Text = $"把房间码发给朋友，让大家加入房间吧！{vbCrLf}房间码：{GetInviteCode()}"
+            LabFinishDesc.Text = $"已创建房间！{vbCrLf}房间码：{GetInviteCode()}{vbCrLf}把房间码发给朋友，让 TA 在启动器中输入房间码即可加入！"
             BtnFinishExit.Text = "关闭"
             BtnFinishPing.ToolTip = "联机状态"
             BtnFinishCopy.Visibility = Visibility.Visible
@@ -493,6 +493,13 @@ Public Class PageLinkMain
         Next
         If IsServerSide Then
             NetRequestByClient($"http://127.0.0.1:{TerracottaPort}/state/scanning?{Query}")
+            '陶瓦联机机制：需捕获游戏内“对局域网开放”的局域网会话才能生成房间码
+            RunInUi(
+            Sub()
+                If FrmLinkMain IsNot Nothing AndAlso FrmLinkMain.LabLoadDesc.IsLoaded Then
+                    FrmLinkMain.LabLoadDesc.Text = "请在游戏内按 Esc 开启『对局域网开放』，即可生成房间码！"
+                End If
+            End Sub)
         Else
             NetRequestByClient($"http://127.0.0.1:{TerracottaPort}/state/guesting?room={WebUtility.UrlEncode(RoomCode)}&{Query}")
         End If
