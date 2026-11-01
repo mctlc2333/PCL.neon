@@ -58,11 +58,11 @@ Public Class PageDownloadCN
         StartDownload()
     End Sub
 
-    Private Sub BtnStart_Click(sender As Object, e As RoutedEventArgs)
+    Private Sub BtnStart_Click(sender As Object, e As MouseButtonEventArgs)
         StartDownload()
     End Sub
 
-    Private Sub BtnStop_Click(sender As Object, e As RoutedEventArgs)
+    Private Sub BtnStop_Click(sender As Object, e As MouseButtonEventArgs)
         IsCanceled = True
         AppendLog("正在停止…（将在当前文件下载完成后中止）")
     End Sub
