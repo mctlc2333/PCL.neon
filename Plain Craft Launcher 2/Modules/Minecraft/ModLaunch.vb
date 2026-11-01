@@ -298,6 +298,8 @@ NextInner:
         Nide = 2
         Auth = 3
         Ms = 5
+        X19 = 6
+        Pt4399 = 7
     End Enum
 
     '各个登录方式的对应数据
@@ -337,6 +339,10 @@ NextInner:
         ''' 是否在本次登录中强制要求玩家重新选择角色，目前仅对 Authlib-Injector 生效。
         ''' </summary>
         Public ForceReselectProfile As Boolean = False
+        ''' <summary>
+        ''' 附加数据（如 4399 验证码、网易 Cookie JSON），仅部分登录方式使用。
+        ''' </summary>
+        Public Extra As String = ""
 
         Public Sub New(Type As McLoginType)
             Me.Type = Type
@@ -416,11 +422,17 @@ NextInner:
                 If Settings.Get(Of String)("CacheNideName") <> "" Then Return Settings.Get(Of String)("CacheNideName")
             Case McLoginType.Auth
                 If Settings.Get(Of String)("CacheAuthName") <> "" Then Return Settings.Get(Of String)("CacheAuthName")
+            Case McLoginType.X19
+                If Settings.Get(Of String)("CacheX19Name") <> "" Then Return Settings.Get(Of String)("CacheX19Name")
+            Case McLoginType.Pt4399
+                If Settings.Get(Of String)("Cache4399Name") <> "" Then Return Settings.Get(Of String)("Cache4399Name")
         End Select
         '查找所有可能的项
         If Settings.Get(Of String)("CacheMsV2Name") <> "" Then Return Settings.Get(Of String)("CacheMsV2Name")
         If Settings.Get(Of String)("CacheNideName") <> "" Then Return Settings.Get(Of String)("CacheNideName")
         If Settings.Get(Of String)("CacheAuthName") <> "" Then Return Settings.Get(Of String)("CacheAuthName")
+        If Settings.Get(Of String)("CacheX19Name") <> "" Then Return Settings.Get(Of String)("CacheX19Name")
+        If Settings.Get(Of String)("Cache4399Name") <> "" Then Return Settings.Get(Of String)("Cache4399Name")
         If Settings.Get(Of String)("LoginLegacyName") <> "" Then Return Settings.Get(Of String)("LoginLegacyName").ToString.BeforeFirst("¨")
         Return Nothing
     End Function
@@ -449,6 +461,18 @@ NextInner:
                 Else
                     Return ""
                 End If
+            Case McLoginType.X19
+                If Settings.Get(Of String)("CacheX19Access") = "" Then
+                    Return FrmLoginX19.IsVaild()
+                Else
+                    Return ""
+                End If
+            Case McLoginType.Pt4399
+                If Settings.Get(Of String)("Cache4399Access") = "" Then
+                    Return FrmLogin4399.IsVaild()
+                Else
+                    Return ""
+                End If
             Case Else
                 Return "未知的登录方式"
         End Select
@@ -466,6 +490,10 @@ NextInner:
                 Return PageLoginNide.IsVaild(LoginData)
             Case McLoginType.Auth
                 Return PageLoginAuth.IsVaild(LoginData)
+            Case McLoginType.X19
+                Return PageLoginX19.IsVaild(LoginData)
+            Case McLoginType.Pt4399
+                Return PageLogin4399.IsVaild(LoginData)
             Case Else
                 Return "未知的登录方式"
         End Select
@@ -499,6 +527,18 @@ NextInner:
                     Else
                         LoginData = PageLoginAuthSkin.GetLoginData()
                     End If
+                Case McLoginType.X19
+                    If Settings.Get(Of String)("CacheX19Access") = "" Then
+                        LoginData = PageLoginX19.GetLoginData()
+                    Else
+                        LoginData = PageLoginX19Skin.GetLoginData()
+                    End If
+                Case McLoginType.Pt4399
+                    If Settings.Get(Of String)("Cache4399Access") = "" Then
+                        LoginData = PageLogin4399.GetLoginData()
+                    Else
+                        LoginData = PageLogin4399Skin.GetLoginData()
+                    End If
             End Select
             Return LoginData
         Catch ex As Exception
@@ -521,6 +561,10 @@ NextInner:
                 Loader = McLoginNideLoader
             Case McLoginType.Auth
                 Loader = McLoginAuthLoader
+            Case McLoginType.X19
+                Loader = McLoginX19Loader
+            Case McLoginType.Pt4399
+                Loader = McLogin4399Loader
         End Select
         '尝试加载
         Loader.WaitForExit(Data.Input, McLoginLoader, Data.IsForceRestarting)
@@ -537,6 +581,8 @@ NextInner:
     Public McLoginLegacyLoader As New LoaderTask(Of McLoginLegacy, McLoginResult)("Loader Login Legacy", AddressOf McLoginLegacyStart)
     Public McLoginNideLoader As New LoaderTask(Of McLoginServer, McLoginResult)("Loader Login Nide", AddressOf McLoginServerStart) With {.ReloadTimeout = 1000 * 60 * 10}
     Public McLoginAuthLoader As New LoaderTask(Of McLoginServer, McLoginResult)("Loader Login Auth", AddressOf McLoginServerStart) With {.ReloadTimeout = 1000 * 60 * 10}
+    Public McLoginX19Loader As New LoaderTask(Of McLoginServer, McLoginResult)("Loader Login X19", AddressOf McLoginX19Start) With {.ReloadTimeout = 1}
+    Public McLogin4399Loader As New LoaderTask(Of McLoginServer, McLoginResult)("Loader Login 4399", AddressOf McLogin4399Start) With {.ReloadTimeout = 1}
 
     '主加载函数，返回所有需要的登录信息
     Private Sub McLoginMsStart(Data As LoaderTask(Of McLoginMs, McLoginResult))
@@ -681,6 +727,103 @@ LoginFinish:
             Settings.Set("Login" & Input.Token & "Email", "")
             Settings.Set("Login" & Input.Token & "Pass", "")
         End Try
+    End Sub
+    Private Sub McLoginX19Start(Data As LoaderTask(Of McLoginServer, McLoginResult))
+        Dim Input As McLoginServer = Data.Input
+        McLaunchLog("登录方式：网易中国版（" & If(Input.UserName = "", "Cookie 导入", Input.UserName) & "）")
+        Data.Progress = 0.2
+        '获取网易认证信息
+        Dim LoginResult As ModNeteaseLogin.X19LoginResult
+        If Input.UserName = "" Then
+            'Cookie 导入模式（Password 中为网易启动器 Cookie JSON）
+            If Input.Password = "" Then Throw New ArgumentException("请填写网易启动器的 Cookie 数据！")
+            LoginResult = ModNeteaseLogin.NideLoginByAuthJson(Input.Password, "netease")
+        Else
+            '网易邮箱直登
+            LoginResult = ModNeteaseLogin.NideLoginByAuthJson(ModNeteaseLogin.MkeyLogin(Input.UserName, Input.Password), "netease")
+        End If
+        If Data.IsCanceled Then Throw New OperationCanceledException
+        Data.Progress = 0.8
+        If LoginResult.Account = "" Then Throw New Exception("登录失败：未获得网易用户名")
+        '保存缓存
+        Dim LoginUuid As String = If(LoginResult.EntityId = "", McLoginLegacyUuid(LoginResult.Account), LoginResult.EntityId)
+        Settings.Set("CacheX19Access", LoginResult.Token)
+        Settings.Set("CacheX19Client", LoginResult.Token)
+        Settings.Set("CacheX19Uuid", LoginUuid)
+        Settings.Set("CacheX19Name", LoginResult.Account)
+        Settings.Set("CacheX19Username", Input.UserName)
+        Settings.Set("CacheX19Pass", Input.Password)
+        Data.Output = New McLoginResult With {.Name = LoginResult.Account, .Uuid = LoginUuid, .AccessToken = LoginResult.Token, .Type = "X19", .ClientToken = LoginResult.Token}
+        '保存启动记录
+        Dim Dict As New Dictionary(Of String, String)
+        Dim Emails As New List(Of String)
+        Dim Passwords As New List(Of String)
+        Try
+            If Not Settings.Get(Of String)("LoginX19Email") = "" Then Emails.AddRange(Settings.Get(Of String)("LoginX19Email").Split("¨"))
+            If Not Settings.Get(Of String)("LoginX19Pass") = "" Then Passwords.AddRange(Settings.Get(Of String)("LoginX19Pass").Split("¨"))
+            For i = 0 To Emails.Count - 1
+                Dict.Add(Emails(i), Passwords(i))
+            Next
+            Dict.Remove(Input.UserName)
+            Emails = New List(Of String)(Dict.Keys)
+            Emails.Insert(0, Input.UserName)
+            Passwords = New List(Of String)(Dict.Values)
+            Passwords.Insert(0, Input.Password)
+            Settings.Set("LoginX19Email", Emails.Join("¨"c))
+            Settings.Set("LoginX19Pass", Passwords.Join("¨"c))
+        Catch ex As Exception
+            Logger.Error(ex, "保存启动记录失败", LogBehavior.Toast)
+        End Try
+        McLaunchLog("网易中国版登录结束（" & LoginResult.Account & "）")
+    End Sub
+    Private Sub McLogin4399Start(Data As LoaderTask(Of McLoginServer, McLoginResult))
+        Dim Input As McLoginServer = Data.Input
+        McLaunchLog("登录方式：4399（" & Input.UserName & "）")
+        Data.Progress = 0.2
+        '解析验证码（Extra = "captchaId|captcha"）
+        Dim CaptchaId As String = "", Captcha As String = ""
+        If Input.Extra <> "" Then
+            CaptchaId = Input.Extra.BeforeFirst("|")
+            Captcha = Input.Extra.AfterFirst("|")
+        End If
+        '4399 密码登录 → SAuth → 网易认证
+        Dim SAuth As String = ModNeteaseLogin.Pt4399Login(Input.UserName, Input.Password, CaptchaId, Captcha)
+        If Data.IsCanceled Then Throw New OperationCanceledException
+        Data.Progress = 0.5
+        Dim LoginResult As ModNeteaseLogin.X19LoginResult = ModNeteaseLogin.NideLoginByAuthJson(SAuth, "4399pc")
+        If Data.IsCanceled Then Throw New OperationCanceledException
+        Data.Progress = 0.8
+        If LoginResult.Account = "" Then Throw New Exception("登录失败：未获得网易用户名")
+        '保存缓存
+        Dim LoginUuid As String = If(LoginResult.EntityId = "", McLoginLegacyUuid(LoginResult.Account), LoginResult.EntityId)
+        Settings.Set("Cache4399Access", LoginResult.Token)
+        Settings.Set("Cache4399Client", LoginResult.Token)
+        Settings.Set("Cache4399Uuid", LoginUuid)
+        Settings.Set("Cache4399Name", LoginResult.Account)
+        Settings.Set("Cache4399Username", Input.UserName)
+        Settings.Set("Cache4399Pass", Input.Password)
+        Data.Output = New McLoginResult With {.Name = LoginResult.Account, .Uuid = LoginUuid, .AccessToken = LoginResult.Token, .Type = "4399", .ClientToken = LoginResult.Token}
+        '保存启动记录
+        Dim Dict As New Dictionary(Of String, String)
+        Dim Emails As New List(Of String)
+        Dim Passwords As New List(Of String)
+        Try
+            If Not Settings.Get(Of String)("Login4399Email") = "" Then Emails.AddRange(Settings.Get(Of String)("Login4399Email").Split("¨"))
+            If Not Settings.Get(Of String)("Login4399Pass") = "" Then Passwords.AddRange(Settings.Get(Of String)("Login4399Pass").Split("¨"))
+            For i = 0 To Emails.Count - 1
+                Dict.Add(Emails(i), Passwords(i))
+            Next
+            Dict.Remove(Input.UserName)
+            Emails = New List(Of String)(Dict.Keys)
+            Emails.Insert(0, Input.UserName)
+            Passwords = New List(Of String)(Dict.Values)
+            Passwords.Insert(0, Input.Password)
+            Settings.Set("Login4399Email", Emails.Join("¨"c))
+            Settings.Set("Login4399Pass", Passwords.Join("¨"c))
+        Catch ex As Exception
+            Logger.Error(ex, "保存启动记录失败", LogBehavior.Toast)
+        End Try
+        McLaunchLog("4399 登录结束（" & LoginResult.Account & "）")
     End Sub
     Private Sub McLoginLegacyStart(Data As LoaderTask(Of McLoginLegacy, McLoginResult))
         Dim Input As McLoginLegacy = Data.Input

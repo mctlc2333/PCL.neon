@@ -131,6 +131,10 @@ Public Class PageLaunchLeft
                 LabLaunchingMethod.Text = "统一通行证"
             Case McLoginType.Auth
                 LabLaunchingMethod.Text = "Authlib-Injector"
+            Case McLoginType.X19
+                LabLaunchingMethod.Text = "网易中国版"
+            Case McLoginType.Pt4399
+                LabLaunchingMethod.Text = "4399"
         End Select
         '初始化页面
         LabLaunchingName.Text = McInstanceSelected.Name
@@ -200,6 +204,10 @@ Public Class PageLaunchLeft
         AuthSkin
         Ms
         MsSkin
+        X19
+        X19Skin
+        Pc4399
+        Pc4399Skin
     End Enum
     ''' <summary>
     ''' 当前页面的种类。
@@ -229,6 +237,18 @@ Public Class PageLaunchLeft
             Case PageType.MsSkin
                 If IsNothing(FrmLoginMsSkin) Then FrmLoginMsSkin = New PageLoginMsSkin
                 Return FrmLoginMsSkin
+            Case PageType.X19
+                If IsNothing(FrmLoginX19) Then FrmLoginX19 = New PageLoginX19
+                Return FrmLoginX19
+            Case PageType.X19Skin
+                If IsNothing(FrmLoginX19Skin) Then FrmLoginX19Skin = New PageLoginX19Skin
+                Return FrmLoginX19Skin
+            Case PageType.Pc4399
+                If IsNothing(FrmLogin4399) Then FrmLogin4399 = New PageLogin4399
+                Return FrmLogin4399
+            Case PageType.Pc4399Skin
+                If IsNothing(FrmLogin4399Skin) Then FrmLogin4399Skin = New PageLogin4399Skin
+                Return FrmLogin4399Skin
             Case Else
                 Throw New ArgumentOutOfRangeException("Type", "即将切换的登录分页编号越界")
         End Select
@@ -360,6 +380,28 @@ UnknownType:
                 PathTypeOne.Data = (New GeometryConverter).ConvertFromString(Logo.IconButtonCard)
                 LabTypeOne.Text = If(McInstanceSelected Is Nothing, Settings.Get(Of String)("CacheAuthServerName"), Settings.Get(Of String)("VersionServerAuthName", Instance:=McInstanceSelected))
                 If LabTypeOne.Text = "" Then LabTypeOne.Text = "第三方登录"
+            Case 5 '网易中国版
+                If Settings.Get(Of String)("CacheX19Access") = "" Then
+                    Type = PageType.X19
+                Else
+                    Type = PageType.X19Skin
+                End If
+                Settings.Set("LoginType", McLoginType.X19)
+                PanType.Visibility = Visibility.Collapsed
+                PanTypeOne.Visibility = Visibility.Visible
+                PathTypeOne.Data = (New GeometryConverter).ConvertFromString(Logo.IconButtonCard)
+                LabTypeOne.Text = "网易中国版登录"
+            Case 6 '4399
+                If Settings.Get(Of String)("Cache4399Access") = "" Then
+                    Type = PageType.Pc4399
+                Else
+                    Type = PageType.Pc4399Skin
+                End If
+                Settings.Set("LoginType", McLoginType.Pt4399)
+                PanType.Visibility = Visibility.Collapsed
+                PanTypeOne.Visibility = Visibility.Visible
+                PathTypeOne.Data = (New GeometryConverter).ConvertFromString(Logo.IconButtonCard)
+                LabTypeOne.Text = "4399 登录"
             Case Else
                 Logger.Error($"未知的登录页面：{LoginPageType}", LogBehavior.Toast)
                 GoTo UnknownType
@@ -545,6 +587,50 @@ Finish:
             RunInUi(AddressOf FrmLoginNideSkin.Skin.Load)
         ElseIf Not Data.IsCanceled Then '如果已经中断，Input 也被清空，就不会再次刷新
             Data.Input = Nothing '清空输入，因为皮肤实际上没有被渲染，如果不清空切换到页面的 Start 会由于输入相同而不渲染
+        End If
+    End Sub
+
+    '网易中国版皮肤（阶段1：使用本地离线皮肤按名字生成）
+    Public Shared SkinX19 As New LoaderTask(Of (String, String), String)("Loader Skin X19", AddressOf SkinX19Load, AddressOf SkinX19Input, ThreadPriority.AboveNormal)
+    Private Shared Function SkinX19Input() As (String, String)
+        '获取名称
+        Return (Settings.Get(Of String)("CacheX19Name"), Settings.Get(Of String)("CacheX19Uuid"))
+    End Function
+    Private Shared Sub SkinX19Load(Data As LoaderTask(Of (String, String), String))
+        RunInUi(Sub() If FrmLoginX19Skin IsNot Nothing AndAlso FrmLoginX19Skin.Skin IsNot Nothing Then FrmLoginX19Skin.Skin.Clear())
+        Dim UserName As String = Data.Input.Item1
+        If UserName = "" Then
+            Data.Output = PathImage & "Skins/" & McSkinSex(McLoginLegacyUuid(UserName)) & ".png"
+            GoTo Finish
+        End If
+        Data.Output = PathImage & "Skins/" & McSkinSex(McLoginLegacyUuid(UserName)) & ".png"
+Finish:
+        If FrmLoginX19Skin IsNot Nothing Then
+            RunInUi(AddressOf FrmLoginX19Skin.Skin.Load)
+        ElseIf Not Data.IsCanceled Then
+            Data.Input = Nothing
+        End If
+    End Sub
+
+    '4399 皮肤（阶段1：使用本地离线皮肤按名字生成）
+    Public Shared Skin4399 As New LoaderTask(Of (String, String), String)("Loader Skin 4399", AddressOf Skin4399Load, AddressOf Skin4399Input, ThreadPriority.AboveNormal)
+    Private Shared Function Skin4399Input() As (String, String)
+        '获取名称
+        Return (Settings.Get(Of String)("Cache4399Name"), Settings.Get(Of String)("Cache4399Uuid"))
+    End Function
+    Private Shared Sub Skin4399Load(Data As LoaderTask(Of (String, String), String))
+        RunInUi(Sub() If FrmLogin4399Skin IsNot Nothing AndAlso FrmLogin4399Skin.Skin IsNot Nothing Then FrmLogin4399Skin.Skin.Clear())
+        Dim UserName As String = Data.Input.Item1
+        If UserName = "" Then
+            Data.Output = PathImage & "Skins/" & McSkinSex(McLoginLegacyUuid(UserName)) & ".png"
+            GoTo Finish
+        End If
+        Data.Output = PathImage & "Skins/" & McSkinSex(McLoginLegacyUuid(UserName)) & ".png"
+Finish:
+        If FrmLogin4399Skin IsNot Nothing Then
+            RunInUi(AddressOf FrmLogin4399Skin.Skin.Load)
+        ElseIf Not Data.IsCanceled Then
+            Data.Input = Nothing
         End If
     End Sub
 

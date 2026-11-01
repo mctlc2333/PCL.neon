@@ -260,6 +260,7 @@
     <Compile Include="Modules\ModSecret.vb" />
     <Compile Include="Modules\ModLanguage.vb" />
     <Compile Include="Modules\ModPlugins.vb" />
+    <Compile Include="Modules\Minecraft\ModNeteaseLogin.vb" />
     <Compile Include="Pages\PageDownload\Resource\PageResource.xaml.vb">
       <DependentUpon>PageResource.xaml</DependentUpon>
     </Compile>
@@ -306,6 +307,18 @@
     </Compile>
     <Compile Include="Pages\PageLaunch\PageLoginNideSkin.xaml.vb">
       <DependentUpon>PageLoginNideSkin.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\PageLoginX19.xaml.vb">
+      <DependentUpon>PageLoginX19.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\PageLoginX19Skin.xaml.vb">
+      <DependentUpon>PageLoginX19Skin.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\PageLogin4399.xaml.vb">
+      <DependentUpon>PageLogin4399.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\PageLogin4399Skin.xaml.vb">
+      <DependentUpon>PageLogin4399Skin.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageLink\PageLinkMain.xaml.vb">
       <DependentUpon>PageLinkMain.xaml</DependentUpon>
@@ -595,6 +608,22 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\PageLaunch\PageLoginNide.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageLaunch\PageLoginX19.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageLaunch\PageLoginX19Skin.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageLaunch\PageLogin4399.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageLaunch\PageLogin4399Skin.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

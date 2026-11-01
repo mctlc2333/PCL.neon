@@ -409,6 +409,10 @@ EndHint:
     Public FrmLoginAuthSkin As PageLoginAuthSkin
     Public FrmLoginMs As PageLoginMs
     Public FrmLoginMsSkin As PageLoginMsSkin
+    Public FrmLoginX19 As PageLoginX19
+    Public FrmLoginX19Skin As PageLoginX19Skin
+    Public FrmLogin4399 As PageLogin4399
+    Public FrmLogin4399Skin As PageLogin4399Skin
 
     '版本设置页面声明
     Public FrmInstanceLeft As PageInstanceLeft
