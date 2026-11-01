@@ -387,6 +387,7 @@ EndHint:
     Public FrmDownloadDataPack As PageDownloadDataPack
     Public FrmDownloadShader As PageDownloadShader
     Public FrmDownloadResourcePack As PageDownloadResourcePack
+    Public FrmDownloadCN As PageDownloadCN
 
     '设置页面声明
     Public FrmSetupLeft As PageSetupLeft
