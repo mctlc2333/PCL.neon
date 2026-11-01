@@ -35,4 +35,5 @@
 - 官方上游仓库：https://github.com/Meloong-Git/PCL
 - 官方 PCL 下载：https://meloong.com/pcl
 - 帮助文档库：https://github.com/LTCatt/PCL2Help
+- 特别鸣谢：https://github.com/NirvanaTec/Fantnel
 - 本分支源码：`main`（本地仓库 `E:\neon\PCL`，已同步至本仓库）
