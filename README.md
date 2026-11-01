@@ -35,4 +35,4 @@
 - 官方上游仓库：https://github.com/Meloong-Git/PCL
 - 官方 PCL 下载：https://meloong.com/pcl
 - 帮助文档库：https://github.com/LTCatt/PCL2Help
-- 本分支源码：`fix-mc-download-and-i18n`（本地仓库 `E:\neon\PCL`，亦同步至本仓库）
+- 本分支源码：`main`（本地仓库 `E:\neon\PCL`，已同步至本仓库）
