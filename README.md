@@ -1,17 +1,36 @@
-# Plain Craft Launcher
+# Plain Craft Launcher neon（社区分支版）
 
-[![Stars](https://img.shields.io/github/stars/Meloong-Git/PCL?style=flat&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEiIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHBhdGggZD0iTTggLjI1YS43NS43NSAwIDAgMSAuNjczLjQxOGwxLjg4MiAzLjgxNSA0LjIxLjYxMmEuNzUuNzUgMCAwIDEgLjQxNiAxLjI3OWwtMy4wNDYgMi45Ny43MTkgNC4xOTJhLjc1MS43NTEgMCAwIDEtMS4wODguNzkxTDggMTIuMzQ3bC0zLjc2NiAxLjk4YS43NS43NSAwIDAgMS0xLjA4OC0uNzlsLjcyLTQuMTk0TC44MTggNi4zNzRhLjc1Ljc1IDAgMCAxIC40MTYtMS4yOGw0LjIxLS42MTFMNy4zMjcuNjY4QS43NS43NSAwIDAgMSA4IC4yNVoiIGZpbGw9IiNlYWM1NGYiLz48L3N2Zz4=&logoSize=auto&label=Stars&labelColor=444444&color=eac54f)](https://github.com/Meloong-Git/PCL/)
-[![Issues](https://img.shields.io/github/issues/Meloong-Git/PCL?style=flat&label=Issues&labelColor=444444&color=1F883D)](https://github.com/Meloong-Git/PCL/issues)
-[![哔哩哔哩](https://img.shields.io/badge/动态-BiliBili-00A4DB?style=flat&labelColor=444444&logoSize=auto)](https://space.bilibili.com/11343203/dynamic)
-[![爱发电](https://img.shields.io/badge/赞助-爱发电-946ce6?style=flat&labelColor=444444&logoSize=auto)](https://meloong.com/afd/a/LTCat)
+[![Stars](https://img.shields.io/github/stars/mctlc2333/PCL.neon?style=flat&label=Stars&labelColor=444444&color=eac54f)](https://github.com/mctlc2333/PCL.neon)
+[![Issues](https://img.shields.io/github/issues/mctlc2333/PCL.neon?style=flat&label=Issues&labelColor=444444&color=1F883D)](https://github.com/mctlc2333/PCL.neon/issues)
 
-包含 PCL 的大部分源代码，包括 UI 库、动画模块、下载模块、Minecraft 启动模块等！<br/>
-代码并不是实时更新的，它会在每次 PCL 发布更新时同步一次。<br/>
-非常感谢社区的大力支持！
+基于官方开源仓库 [Meloong-Git/PCL](https://github.com/Meloong-Git/PCL)
+（上游 HEAD `93ede5d`，2.99.0.1 正式版）的**社区分支版本**，由社区维护者
+**超爱吃薯片** 维护，在原版基础上做了面向国内玩家与插件生态的功能增强，
+持续跟进上游更新。
+
+代码在每次 PCL 发布更新时同步一次上游，并叠加本分支的社区改动。
 
 <br/>
 
+### 本分支主要改动（相对上游 `93ede5d`）
+
+1. **修复 Minecraft 游戏本体下载**（官方 2.99.0.0 起因合规移除，本分支恢复全部入口）
+2. **修复整合包下载 / 安装**（CurseForge + Modrinth，内置组织 API Key）
+3. **增加更换语言功能，支持 73 种语言**（切换即时生效）
+4. **新增插件系统**（`plugins\*.dll` 鸭子类型加载 + 宿主 API）
+5. **品牌更名为 Plain Craft Launcher neon**（名称 / 作者 / 版本号 1.10）
+6. **复活联机功能并改用陶瓦联机（Terracotta）**（房间码联机，局域网互通）
+7. **新增网易中国版（X19）与 4399 登录**（参照 FantNel 脱盒方案，阶段 1：登录换凭证）
+
+### 使用方式
+
+- 直接下载交付目录 `E:\neon\PCL-fork-delivery\` 中的 `Plain Craft Launcher 2.exe`
+  或通过补丁自行构建（详见交付目录 `README.md`）；
+- 开发插件：参照 `pcl-plugin-example\` 示例工程，编译后放入启动器同目录 `plugins\` 即可。
+
 ### 相关资源
-- [PCL 下载](https://meloong.com/pcl)：下载可免费使用的正式版 PCL！
-- [PCL 功能投票](https://github.com/Meloong-Git/PCL/discussions/2)：来参加投票吧，开发者会优先处理票数较高的项目！
-- [帮助文档库](https://github.com/LTCatt/PCL2Help)：PCL 内置帮助文档的存储库
+
+- 官方上游仓库：https://github.com/Meloong-Git/PCL
+- 官方 PCL 下载：https://meloong.com/pcl
+- 帮助文档库：https://github.com/LTCatt/PCL2Help
+- 本分支源码：`fix-mc-download-and-i18n`（本地仓库 `E:\neon\PCL`，亦同步至本仓库）
